@@ -1,0 +1,22 @@
+# Risk score is 0-100. Weights are UNCALIBRATED placeholders - they must be
+# fitted/validated against historical flood events before any public alerting.
+weights:
+  satellite_water: 0.40   # fraction of nearby pixels flagged as water by satellite
+  low_elevation: 0.25     # how low the point sits vs its surroundings
+  rainfall: 0.15          # 24h accumulated rainfall
+  water_level_trend: 0.20 # projected sensor water level vs warning level
+
+normalization:
+  rainfall_mm_24h_max: 150.0     # rainfall at/above this saturates the factor
+  low_elevation_scale_m: 3.0     # metres below local mean that saturates the factor
+  projection_horizon_h: 3.0      # hours ahead for water-level extrapolation
+
+levels:  # lower bound of score (inclusive), checked highest first
+  critical: 75
+  high: 55
+  moderate: 30
+  low: 0
+
+alerts:
+  min_level_to_notify: high
+  cooldown_min: 60   # do not re-alert the same user for the same zone within this window

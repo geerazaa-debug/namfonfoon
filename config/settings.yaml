@@ -1,0 +1,33 @@
+nasa:
+  # EONET v3: near-real-time natural event feed (no key required)
+  eonet_url: https://eonet.gsfc.nasa.gov/api/v3/events
+  # CMR: Earthdata metadata search (no key required for search)
+  cmr_granules_url: https://cmr.earthdata.nasa.gov/search/granules.json
+  # MODIS/LANCE NRT Global Flood Product (MCDWD_L3_NRT)
+  flood_collection_short_name: MCDWD_L3_NRT
+  timeout_s: 20
+  max_retries: 4
+  backoff_base_s: 1.0
+
+local_sensors:
+  timeout_s: 10
+  max_retries: 3
+
+# Area of interest: Greater Bangkok (lat/lon WGS84)
+area_of_interest:
+  name: Greater Bangkok
+  min_lat: 13.40
+  max_lat: 14.10
+  min_lon: 100.25
+  max_lon: 100.95
+
+polling:
+  satellite_interval_min: 180
+  sensor_interval_min: 10
+
+geofence:
+  default_radius_km: 2.0
+
+line:
+  push_url: https://api.line.me/v2/bot/message/push
+  timeout_s: 10
