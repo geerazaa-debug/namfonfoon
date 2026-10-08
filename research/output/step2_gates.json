@@ -1,0 +1,42 @@
+{
+  "gates": {
+    "G1": {
+      "pass": true,
+      "episodes": 117,
+      "stations_ge3": 10
+    },
+    "G2": {
+      "pass": true,
+      "episodes": 28
+    },
+    "G3": {
+      "pass": true,
+      "episodes_with_usable_hls": 15
+    },
+    "G4": {
+      "pass": true,
+      "episodes_with_usable_sat": 18
+    }
+  },
+  "excluded": {
+    "BKC004": [
+      2020,
+      2023,
+      2024,
+      2025
+    ],
+    "BKC002": [
+      2023,
+      2024,
+      2025
+    ],
+    "BKC003": [
+      2024
+    ],
+    "GLF001": [
+      2019,
+      2020,
+      2021
+    ]
+  }
+}

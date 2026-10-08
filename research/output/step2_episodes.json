@@ -1,0 +1,1949 @@
+[
+ {
+  "year": 2019,
+  "start_utc": "2019-01-04T22:00:00+00:00",
+  "end_utc": "2019-01-05T10:00:00+00:00",
+  "hours": 13,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 4,
+  "hls_usable": 2,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-01-07T23:00:00+00:00",
+  "end_utc": "2019-01-11T05:00:00+00:00",
+  "hours": 79,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 3,
+  "hls_usable": 1,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-01-13T03:00:00+00:00",
+  "end_utc": "2019-01-13T05:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-01-18T23:00:00+00:00",
+  "end_utc": "2019-01-21T04:00:00+00:00",
+  "hours": 54,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 6,
+  "hls_usable": 4,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-01-23T00:00:00+00:00",
+  "end_utc": "2019-01-28T05:00:00+00:00",
+  "hours": 126,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 10,
+  "hls_usable": 4,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-02-05T01:00:00+00:00",
+  "end_utc": "2019-02-05T02:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-03-17T22:00:00+00:00",
+  "end_utc": "2019-03-22T01:00:00+00:00",
+  "hours": 100,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 8,
+  "hls_usable": 5,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-03-24T01:00:00+00:00",
+  "end_utc": "2019-03-24T02:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 4,
+  "hls_usable": 2,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-04-07T12:00:00+00:00",
+  "end_utc": "2019-04-09T15:00:00+00:00",
+  "hours": 52,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 9,
+  "hls_usable": 2,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-04-21T12:00:00+00:00",
+  "end_utc": "2019-04-22T16:00:00+00:00",
+  "hours": 29,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 6,
+  "hls_usable": 2,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-04-24T15:00:00+00:00",
+  "end_utc": "2019-04-24T17:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 5,
+  "hls_usable": 2,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-05-08T14:00:00+00:00",
+  "end_utc": "2019-05-08T15:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 5,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-05-10T16:00:00+00:00",
+  "end_utc": "2019-05-10T17:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 3,
+  "hls_usable": 1,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-05-19T12:00:00+00:00",
+  "end_utc": "2019-05-22T16:00:00+00:00",
+  "hours": 77,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 6,
+  "hls_usable": 2,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-06-03T12:00:00+00:00",
+  "end_utc": "2019-06-08T18:00:00+00:00",
+  "hours": 127,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 10,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-06-20T14:00:00+00:00",
+  "end_utc": "2019-06-20T16:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 3,
+  "hls_usable": 2,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-07-04T13:00:00+00:00",
+  "end_utc": "2019-07-06T17:00:00+00:00",
+  "hours": 53,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-09-05T20:00:00+00:00",
+  "end_utc": "2019-09-05T21:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-09-17T15:00:00+00:00",
+  "end_utc": "2019-09-17T19:00:00+00:00",
+  "hours": 5,
+  "stations": [
+   "BKK021"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-10-17T01:00:00+00:00",
+  "end_utc": "2019-10-17T02:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-10-19T02:00:00+00:00",
+  "end_utc": "2019-10-21T07:00:00+00:00",
+  "hours": 54,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-10-25T08:00:00+00:00",
+  "end_utc": "2019-10-26T11:00:00+00:00",
+  "hours": 28,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-10-28T10:00:00+00:00",
+  "end_utc": "2019-10-30T02:00:00+00:00",
+  "hours": 41,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-11-15T01:00:00+00:00",
+  "end_utc": "2019-11-21T09:00:00+00:00",
+  "hours": 153,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-11-26T23:00:00+00:00",
+  "end_utc": "2019-12-03T08:00:00+00:00",
+  "hours": 154,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-12-13T01:00:00+00:00",
+  "end_utc": "2019-12-14T03:00:00+00:00",
+  "hours": 27,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-12-16T03:00:00+00:00",
+  "end_utc": "2019-12-16T05:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-12-18T04:00:00+00:00",
+  "end_utc": "2019-12-18T06:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2019,
+  "start_utc": "2019-12-28T01:00:00+00:00",
+  "end_utc": "2019-12-30T04:00:00+00:00",
+  "hours": 52,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-01-01T03:00:00+00:00",
+  "end_utc": "2020-01-01T06:00:00+00:00",
+  "hours": 4,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-01-14T01:00:00+00:00",
+  "end_utc": "2020-01-15T05:00:00+00:00",
+  "hours": 29,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-01-24T00:00:00+00:00",
+  "end_utc": "2020-01-26T03:00:00+00:00",
+  "hours": 52,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-01-31T02:00:00+00:00",
+  "end_utc": "2020-02-01T05:00:00+00:00",
+  "hours": 28,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-02-10T01:00:00+00:00",
+  "end_utc": "2020-02-14T04:00:00+00:00",
+  "hours": 100,
+  "stations": [
+   "BKK006",
+   "CPY014"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-02-18T22:00:00+00:00",
+  "end_utc": "2020-02-19T04:00:00+00:00",
+  "hours": 7,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-02-20T23:00:00+00:00",
+  "end_utc": "2020-02-25T03:00:00+00:00",
+  "hours": 101,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-02-27T01:00:00+00:00",
+  "end_utc": "2020-02-28T03:00:00+00:00",
+  "hours": 27,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-03-07T23:00:00+00:00",
+  "end_utc": "2020-03-08T00:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-04-08T18:00:00+00:00",
+  "end_utc": "2020-04-09T02:00:00+00:00",
+  "hours": 9,
+  "stations": [
+   "BKK018"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-04-10T12:00:00+00:00",
+  "end_utc": "2020-04-12T16:00:00+00:00",
+  "hours": 53,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-04-15T18:00:00+00:00",
+  "end_utc": "2020-04-15T21:00:00+00:00",
+  "hours": 4,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-04-26T14:00:00+00:00",
+  "end_utc": "2020-04-30T19:00:00+00:00",
+  "hours": 102,
+  "stations": [
+   "BKK006",
+   "BKK018"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-05-10T14:00:00+00:00",
+  "end_utc": "2020-05-10T16:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-05-13T17:00:00+00:00",
+  "end_utc": "2020-05-13T18:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-05-30T18:00:00+00:00",
+  "end_utc": "2020-05-30T19:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-06-07T13:00:00+00:00",
+  "end_utc": "2020-06-09T17:00:00+00:00",
+  "hours": 53,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-06-22T13:00:00+00:00",
+  "end_utc": "2020-06-22T16:00:00+00:00",
+  "hours": 4,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-06-24T15:00:00+00:00",
+  "end_utc": "2020-06-24T16:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-07-06T14:00:00+00:00",
+  "end_utc": "2020-07-07T16:00:00+00:00",
+  "hours": 27,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-07-13T19:00:00+00:00",
+  "end_utc": "2020-07-13T22:00:00+00:00",
+  "hours": 4,
+  "stations": [
+   "BKK021"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-07-20T13:00:00+00:00",
+  "end_utc": "2020-07-26T17:00:00+00:00",
+  "hours": 149,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-08-03T14:00:00+00:00",
+  "end_utc": "2020-08-04T15:00:00+00:00",
+  "hours": 26,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-08-07T14:00:00+00:00",
+  "end_utc": "2020-08-07T15:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-08-20T13:00:00+00:00",
+  "end_utc": "2020-08-23T15:00:00+00:00",
+  "hours": 75,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-09-01T11:00:00+00:00",
+  "end_utc": "2020-09-05T14:00:00+00:00",
+  "hours": 100,
+  "stations": [
+   "BKK006"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-10-02T13:00:00+00:00",
+  "end_utc": "2020-10-04T00:00:00+00:00",
+  "hours": 36,
+  "stations": [
+   "BKK021"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2020,
+  "start_utc": "2020-10-17T06:00:00+00:00",
+  "end_utc": "2020-10-21T19:00:00+00:00",
+  "hours": 110,
+  "stations": [
+   "BKK002",
+   "BKK009",
+   "BKK021"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2021,
+  "start_utc": "2021-01-19T11:00:00+00:00",
+  "end_utc": "2021-01-19T15:00:00+00:00",
+  "hours": 5,
+  "stations": [
+   "BKK021"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2021,
+  "start_utc": "2021-02-10T03:00:00+00:00",
+  "end_utc": "2021-02-15T10:00:00+00:00",
+  "hours": 128,
+  "stations": [
+   "BKK018"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2021,
+  "start_utc": "2021-03-14T08:00:00+00:00",
+  "end_utc": "2021-03-14T09:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK018"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2021,
+  "start_utc": "2021-03-29T02:00:00+00:00",
+  "end_utc": "2021-03-29T03:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK018"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2021,
+  "start_utc": "2021-03-30T18:00:00+00:00",
+  "end_utc": "2021-03-30T19:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "AIT001"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2021,
+  "start_utc": "2021-05-15T07:00:00+00:00",
+  "end_utc": "2021-05-15T08:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK009"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2021,
+  "start_utc": "2021-05-17T08:00:00+00:00",
+  "end_utc": "2021-05-18T05:00:00+00:00",
+  "hours": 22,
+  "stations": [
+   "BKK009",
+   "BKK018"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2021,
+  "start_utc": "2021-05-19T11:00:00+00:00",
+  "end_utc": "2021-05-20T02:00:00+00:00",
+  "hours": 16,
+  "stations": [
+   "BKK009",
+   "BKK018"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2021,
+  "start_utc": "2021-07-08T01:00:00+00:00",
+  "end_utc": "2021-07-08T02:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2021,
+  "start_utc": "2021-08-28T05:00:00+00:00",
+  "end_utc": "2021-09-05T09:00:00+00:00",
+  "hours": 197,
+  "stations": [
+   "BKK009",
+   "BKK017",
+   "BKK021"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2021,
+  "start_utc": "2021-09-07T16:00:00+00:00",
+  "end_utc": "2021-09-13T15:00:00+00:00",
+  "hours": 144,
+  "stations": [
+   "BKK009",
+   "BKK017"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2021,
+  "start_utc": "2021-09-21T00:00:00+00:00",
+  "end_utc": "2021-09-26T03:00:00+00:00",
+  "hours": 124,
+  "stations": [
+   "BKK003",
+   "BKK009",
+   "BKK017"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2021,
+  "start_utc": "2021-09-30T08:00:00+00:00",
+  "end_utc": "2021-11-14T10:00:00+00:00",
+  "hours": 1083,
+  "stations": [
+   "BKK003",
+   "BKK021",
+   "CPY014"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2021,
+  "start_utc": "2021-11-16T09:00:00+00:00",
+  "end_utc": "2021-11-16T10:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK003"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2021,
+  "start_utc": "2021-11-20T00:00:00+00:00",
+  "end_utc": "2021-11-24T05:00:00+00:00",
+  "hours": 102,
+  "stations": [
+   "BKK003"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-01-24T06:00:00+00:00",
+  "end_utc": "2022-01-24T07:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK020"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-03-12T21:00:00+00:00",
+  "end_utc": "2022-03-12T22:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "AIT001"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-05-17T14:00:00+00:00",
+  "end_utc": "2022-05-18T22:00:00+00:00",
+  "hours": 33,
+  "stations": [
+   "BKK021"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-08-01T08:00:00+00:00",
+  "end_utc": "2022-08-02T07:00:00+00:00",
+  "hours": 24,
+  "stations": [
+   "BKK021"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-08-11T13:00:00+00:00",
+  "end_utc": "2022-08-13T16:00:00+00:00",
+  "hours": 52,
+  "stations": [
+   "BKK003"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-08-15T14:00:00+00:00",
+  "end_utc": "2022-08-16T16:00:00+00:00",
+  "hours": 27,
+  "stations": [
+   "BKK003"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-08-24T13:00:00+00:00",
+  "end_utc": "2022-08-26T15:00:00+00:00",
+  "hours": 51,
+  "stations": [
+   "BKK003"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-08-28T12:00:00+00:00",
+  "end_utc": "2022-09-02T16:00:00+00:00",
+  "hours": 125,
+  "stations": [
+   "BKK003",
+   "BKK018"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-09-04T15:00:00+00:00",
+  "end_utc": "2022-09-04T22:00:00+00:00",
+  "hours": 8,
+  "stations": [
+   "BKK021"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-09-06T10:00:00+00:00",
+  "end_utc": "2022-09-19T15:00:00+00:00",
+  "hours": 318,
+  "stations": [
+   "BKK002",
+   "BKK003",
+   "BKK009",
+   "BKK017",
+   "BKK020",
+   "BKK021"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-09-22T10:00:00+00:00",
+  "end_utc": "2022-11-07T11:00:00+00:00",
+  "hours": 1106,
+  "stations": [
+   "BKK002",
+   "BKK003",
+   "BKK007",
+   "BKK009",
+   "BKK017",
+   "BKK020",
+   "BKK021",
+   "C.12",
+   "CPY014"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-11-09T00:00:00+00:00",
+  "end_utc": "2022-11-15T07:00:00+00:00",
+  "hours": 152,
+  "stations": [
+   "AIT001",
+   "BKK003"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-11-25T02:00:00+00:00",
+  "end_utc": "2022-11-30T08:00:00+00:00",
+  "hours": 127,
+  "stations": [
+   "BKK003"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-12-01T23:00:00+00:00",
+  "end_utc": "2022-12-02T01:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-12-03T20:00:00+00:00",
+  "end_utc": "2022-12-03T22:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "AIT001"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-12-17T17:00:00+00:00",
+  "end_utc": "2022-12-17T18:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2022,
+  "start_utc": "2022-12-21T13:00:00+00:00",
+  "end_utc": "2022-12-21T14:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-01-18T11:00:00+00:00",
+  "end_utc": "2023-01-18T12:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-02-19T19:00:00+00:00",
+  "end_utc": "2023-02-19T20:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-03-24T06:00:00+00:00",
+  "end_utc": "2023-03-24T07:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK017"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-04-03T03:00:00+00:00",
+  "end_utc": "2023-04-03T04:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK017"
+  ],
+  "hls_total": 4,
+  "hls_usable": 1,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-04-19T02:00:00+00:00",
+  "end_utc": "2023-04-20T06:00:00+00:00",
+  "hours": 29,
+  "stations": [
+   "BKK017"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-04-22T09:00:00+00:00",
+  "end_utc": "2023-04-23T05:00:00+00:00",
+  "hours": 21,
+  "stations": [
+   "BKK017"
+  ],
+  "hls_total": 2,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-04-25T04:00:00+00:00",
+  "end_utc": "2023-04-25T06:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "BKK017"
+  ],
+  "hls_total": 1,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-04-27T09:00:00+00:00",
+  "end_utc": "2023-04-28T06:00:00+00:00",
+  "hours": 22,
+  "stations": [
+   "BKK017"
+  ],
+  "hls_total": 2,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-05-20T07:00:00+00:00",
+  "end_utc": "2023-05-21T10:00:00+00:00",
+  "hours": 28,
+  "stations": [
+   "BKK017"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-05-24T07:00:00+00:00",
+  "end_utc": "2023-05-25T06:00:00+00:00",
+  "hours": 24,
+  "stations": [
+   "BKK017"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-06-01T01:00:00+00:00",
+  "end_utc": "2023-06-01T02:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-07-03T01:00:00+00:00",
+  "end_utc": "2023-07-03T02:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-07-10T00:00:00+00:00",
+  "end_utc": "2023-07-10T01:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-07-12T23:00:00+00:00",
+  "end_utc": "2023-07-13T00:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-07-21T03:00:00+00:00",
+  "end_utc": "2023-07-22T02:00:00+00:00",
+  "hours": 24,
+  "stations": [
+   "BKK021",
+   "CPY014"
+  ],
+  "hls_total": 2,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-08-25T20:00:00+00:00",
+  "end_utc": "2023-08-25T21:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 2,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-08-28T22:00:00+00:00",
+  "end_utc": "2023-08-28T23:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 2,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-09-25T23:00:00+00:00",
+  "end_utc": "2023-09-26T00:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-10-05T05:00:00+00:00",
+  "end_utc": "2023-10-05T06:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK020"
+  ],
+  "hls_total": 1,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-10-07T02:00:00+00:00",
+  "end_utc": "2023-10-08T23:00:00+00:00",
+  "hours": 46,
+  "stations": [
+   "CPY014",
+   "VLGE20"
+  ],
+  "hls_total": 1,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-10-23T23:00:00+00:00",
+  "end_utc": "2023-10-24T00:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-10-27T17:00:00+00:00",
+  "end_utc": "2023-10-27T18:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-10-31T20:00:00+00:00",
+  "end_utc": "2023-10-31T22:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 1,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-11-02T20:00:00+00:00",
+  "end_utc": "2023-11-02T21:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 2,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-11-18T18:00:00+00:00",
+  "end_utc": "2023-11-18T22:00:00+00:00",
+  "hours": 5,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-11-27T13:00:00+00:00",
+  "end_utc": "2023-11-27T14:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "AIT001"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-12-15T15:00:00+00:00",
+  "end_utc": "2023-12-15T16:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 2,
+  "hls_usable": 1,
+  "s1_usable": 0
+ },
+ {
+  "year": 2023,
+  "start_utc": "2023-12-20T06:00:00+00:00",
+  "end_utc": "2023-12-20T23:00:00+00:00",
+  "hours": 18,
+  "stations": [
+   "AIT001",
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 1,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-01-04T19:00:00+00:00",
+  "end_utc": "2024-01-04T20:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 1,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-01-11T11:00:00+00:00",
+  "end_utc": "2024-01-11T13:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "AIT001"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-02-05T10:00:00+00:00",
+  "end_utc": "2024-02-05T11:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "AIT001"
+  ],
+  "hls_total": 4,
+  "hls_usable": 1,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-02-06T14:00:00+00:00",
+  "end_utc": "2024-02-07T11:00:00+00:00",
+  "hours": 22,
+  "stations": [
+   "AIT001"
+  ],
+  "hls_total": 4,
+  "hls_usable": 1,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-02-08T23:00:00+00:00",
+  "end_utc": "2024-02-09T13:00:00+00:00",
+  "hours": 15,
+  "stations": [
+   "AIT001",
+   "CPY014"
+  ],
+  "hls_total": 2,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-02-24T07:00:00+00:00",
+  "end_utc": "2024-02-24T17:00:00+00:00",
+  "hours": 11,
+  "stations": [
+   "AIT001"
+  ],
+  "hls_total": 2,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-03-06T11:00:00+00:00",
+  "end_utc": "2024-03-07T14:00:00+00:00",
+  "hours": 28,
+  "stations": [
+   "AIT001",
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 1,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-03-08T15:00:00+00:00",
+  "end_utc": "2024-03-08T16:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "AIT001"
+  ],
+  "hls_total": 3,
+  "hls_usable": 1,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-03-11T03:00:00+00:00",
+  "end_utc": "2024-03-11T04:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "AIT001"
+  ],
+  "hls_total": 2,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-03-21T10:00:00+00:00",
+  "end_utc": "2024-03-21T11:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-04-22T09:00:00+00:00",
+  "end_utc": "2024-04-22T11:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "AIT001"
+  ],
+  "hls_total": 4,
+  "hls_usable": 2,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-05-16T04:00:00+00:00",
+  "end_utc": "2024-05-16T05:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-07-18T23:00:00+00:00",
+  "end_utc": "2024-07-19T00:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 1,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-07-29T00:00:00+00:00",
+  "end_utc": "2024-07-29T01:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 2,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-08-01T22:00:00+00:00",
+  "end_utc": "2024-08-01T23:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 0,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-08-06T17:00:00+00:00",
+  "end_utc": "2024-08-07T05:00:00+00:00",
+  "hours": 13,
+  "stations": [
+   "BKK021",
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 0
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-08-31T00:00:00+00:00",
+  "end_utc": "2024-08-31T01:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 2
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-09-02T03:00:00+00:00",
+  "end_utc": "2024-09-02T04:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 2
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-09-04T04:00:00+00:00",
+  "end_utc": "2024-09-05T05:00:00+00:00",
+  "hours": 26,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 3
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-09-17T01:00:00+00:00",
+  "end_utc": "2024-09-17T02:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 2
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-09-23T20:00:00+00:00",
+  "end_utc": "2024-09-23T21:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 1,
+  "hls_usable": 0,
+  "s1_usable": 2
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-09-29T01:00:00+00:00",
+  "end_utc": "2024-09-30T00:00:00+00:00",
+  "hours": 24,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 3
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-10-06T02:00:00+00:00",
+  "end_utc": "2024-10-06T03:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK003"
+  ],
+  "hls_total": 2,
+  "hls_usable": 0,
+  "s1_usable": 3
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-10-08T03:00:00+00:00",
+  "end_utc": "2024-10-08T06:00:00+00:00",
+  "hours": 4,
+  "stations": [
+   "BKK003"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 2
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-10-13T09:00:00+00:00",
+  "end_utc": "2024-10-13T11:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "BKK003"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 2
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-11-04T02:00:00+00:00",
+  "end_utc": "2024-11-04T03:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK003"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 2
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-12-08T19:00:00+00:00",
+  "end_utc": "2024-12-08T20:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 3
+ },
+ {
+  "year": 2024,
+  "start_utc": "2024-12-14T13:00:00+00:00",
+  "end_utc": "2024-12-14T15:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 3,
+  "hls_usable": 0,
+  "s1_usable": 3
+ },
+ {
+  "year": 2025,
+  "start_utc": "2025-01-10T11:00:00+00:00",
+  "end_utc": "2025-01-10T12:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 2,
+  "hls_usable": 0,
+  "s1_usable": 4
+ },
+ {
+  "year": 2025,
+  "start_utc": "2025-04-05T18:00:00+00:00",
+  "end_utc": "2025-04-05T19:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "AIT001"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 2
+ },
+ {
+  "year": 2025,
+  "start_utc": "2025-05-10T14:00:00+00:00",
+  "end_utc": "2025-05-10T16:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "BKK021"
+  ],
+  "hls_total": 1,
+  "hls_usable": 0,
+  "s1_usable": 1
+ },
+ {
+  "year": 2025,
+  "start_utc": "2025-05-15T04:00:00+00:00",
+  "end_utc": "2025-05-15T05:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 1
+ },
+ {
+  "year": 2025,
+  "start_utc": "2025-10-03T10:00:00+00:00",
+  "end_utc": "2025-10-08T13:00:00+00:00",
+  "hours": 124,
+  "stations": [
+   "BKK003",
+   "CPY014"
+  ],
+  "hls_total": 7,
+  "hls_usable": 0,
+  "s1_usable": 4
+ },
+ {
+  "year": 2025,
+  "start_utc": "2025-10-13T07:00:00+00:00",
+  "end_utc": "2025-10-14T14:00:00+00:00",
+  "hours": 32,
+  "stations": [
+   "BKK003"
+  ],
+  "hls_total": 5,
+  "hls_usable": 0,
+  "s1_usable": 3
+ },
+ {
+  "year": 2025,
+  "start_utc": "2025-10-23T01:00:00+00:00",
+  "end_utc": "2025-10-25T05:00:00+00:00",
+  "hours": 53,
+  "stations": [
+   "CPY014"
+  ],
+  "hls_total": 7,
+  "hls_usable": 0,
+  "s1_usable": 2
+ },
+ {
+  "year": 2025,
+  "start_utc": "2025-11-01T23:00:00+00:00",
+  "end_utc": "2025-11-03T07:00:00+00:00",
+  "hours": 33,
+  "stations": [
+   "BKK002",
+   "BKK021",
+   "CPY014"
+  ],
+  "hls_total": 4,
+  "hls_usable": 0,
+  "s1_usable": 2
+ },
+ {
+  "year": 2025,
+  "start_utc": "2025-11-06T00:00:00+00:00",
+  "end_utc": "2025-11-29T08:00:00+00:00",
+  "hours": 561,
+  "stations": [
+   "BKK003",
+   "C.12",
+   "CPY014"
+  ],
+  "hls_total": 19,
+  "hls_usable": 2,
+  "s1_usable": 8
+ },
+ {
+  "year": 2025,
+  "start_utc": "2025-12-04T00:00:00+00:00",
+  "end_utc": "2025-12-10T07:00:00+00:00",
+  "hours": 152,
+  "stations": [
+   "BKK003"
+  ],
+  "hls_total": 9,
+  "hls_usable": 2,
+  "s1_usable": 4
+ },
+ {
+  "year": 2025,
+  "start_utc": "2025-12-12T06:00:00+00:00",
+  "end_utc": "2025-12-12T07:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "BKK003"
+  ],
+  "hls_total": 1,
+  "hls_usable": 0,
+  "s1_usable": 2
+ },
+ {
+  "year": 2025,
+  "start_utc": "2025-12-15T11:00:00+00:00",
+  "end_utc": "2025-12-15T13:00:00+00:00",
+  "hours": 3,
+  "stations": [
+   "AIT001"
+  ],
+  "hls_total": 4,
+  "hls_usable": 2,
+  "s1_usable": 2
+ },
+ {
+  "year": 2025,
+  "start_utc": "2025-12-17T06:00:00+00:00",
+  "end_utc": "2025-12-17T07:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "AIT001"
+  ],
+  "hls_total": 4,
+  "hls_usable": 2,
+  "s1_usable": 2
+ },
+ {
+  "year": 2025,
+  "start_utc": "2025-12-19T13:00:00+00:00",
+  "end_utc": "2025-12-19T14:00:00+00:00",
+  "hours": 2,
+  "stations": [
+   "AIT001"
+  ],
+  "hls_total": 3,
+  "hls_usable": 2,
+  "s1_usable": 2
+ }
+]
