@@ -1,17 +1,18 @@
-# FloodWatch AI Engine
+# FloodWatch: Bangkok Heavy-Rain Advisory
 
-Hyper-local flood risk scoring and alerting: merges NASA satellite flood data with ground elevation and local water-level sensors, pushes LINE alerts to users near risk zones, and exposes a B2B flood-aware routing API.
+Rule-based heavy-rain alerts per Bangkok district, combined with official BMA road-flood hotspot statistics, pushed over LINE and exposed as a B2B API.
 
-> **Status: scaffold.** The risk model is an uncalibrated weighted-factor heuristic. Do not use it for public safety alerts until it is backtested against historical flood events.
+> **Status: v0.2 rule-based advisory.** This is not a flood forecast. A pre-registered backtest (2022–24 train, 2025 test) found no multi-factor model that beats rain-only. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the evidence chain and the rules.
 
 ## Data sources
-| Source | Used for | Auth |
+| Source | Used for | Licence |
 |---|---|---|
-| NASA EONET v3 (`category=floods`) | Flood event points | none |
-| NASA CMR granule search (`MCDWD_L3_NRT`, MODIS NRT Global Flood Product) | Satellite flood-map granule metadata | none for search; Earthdata token to download |
-| DEM samples (SRTM / Copernicus GLO-30) | Low-lying factor | — |
-| Local sensor feed (placeholder schema) | Water-level trend | `LOCAL_SENSOR_API_KEY` |
+| BMA DDS `frd_dds` road-flood records 2022–25 | District hotspot table (`config/district_hotspots.json`), rain thresholds | CC BY: "สำนักการระบายน้ำ กรุงเทพมหานคร" |
+| geoBoundaries THA ADM2 | District polygons (`config/bangkok_districts.geojson`) | CC BY 3.0 IGO |
+| Rain observations (gauge / radar), any source | Engine input `RainObservation` | live source not wired yet |
 | LINE Messaging API | Push alerts, location sharing via webhook | channel token + secret |
+
+Research-only sources (ThaiWater, Traffy Fondue, NASA CMR/OPERA, Copernicus DEM) are documented in `docs/`.
 
 ## Quick start
 ```bash
@@ -27,22 +28,22 @@ cp .env.example .env   # fill in values
 |---|---|---|---|
 | GET | `/health` | — | Liveness |
 | POST | `/webhook/line` | `X-Line-Signature` | Registers a user's shared location; removes on unfollow |
-| POST | `/v1/risk/assess` | `X-API-Key` | Score one point from factor inputs |
+| POST | `/v1/risk/assess` | `X-API-Key` | Rain advisory level for a point from rain observations |
 | POST | `/v1/zones/nearby` | `X-API-Key` | Risk zones within radius of a point |
 | POST | `/v1/route/check` | `X-API-Key` | Does a route polyline cross any risk zone? |
 
-## Risk score
-`score = 100 * Σ wᵢ·factorᵢ`, each factor in [0, 1]:
-- `satellite_water` — fraction of nearby pixels flagged as water
-- `low_elevation` — metres below the local mean elevation, scaled
-- `rainfall` — 24h rainfall / saturation level
-- `water_level_trend` — sensor level projected `projection_horizon_h` ahead (least-squares rise rate) / warning level
+## Alert rules
+`level = max(rule_1h, rule_6h)`, then +1 level in DDS hotspot districts when rain is already ≥ moderate. Alerts are sent at **high** or above, and only on observations less than 90 minutes old.
 
-Weights and level cut-offs live in `config/risk_thresholds.yaml`.
+| Level | 1 h | 6 h |
+|---|---|---|
+| moderate | ≥ 10 mm | ≥ 36 mm |
+| high | ≥ 30 mm | ≥ 49 mm |
+| critical | ≥ 60 mm | ≥ 67 mm |
+
+The 6 h thresholds are the 10th, 25th and 50th percentiles of rainfall in BMA-recorded road floods. The false-alarm rate is **unmeasured**. Values live in `config/risk_thresholds.yaml`.
 
 ## Not yet built
-- Scheduler/poller that fetches data, builds `FloodZone`s, and fans out alerts (with cooldown)
-- Raster sampling of flood-product granules into `satellite_water_fraction`
-- Persistent storage (zones and subscribers are in memory)
-- Detour routing provider (payload builder accepts a `detour_url`)
-- Historical backtest of the risk model
+- Live rain source (ThaiWater `rain_1h` per station, or radar QPE: access unverified)
+- Poller + per-user cooldown, and persistent subscriber storage
+- Predictive model: paused. See "Path back to prediction" in `docs/ARCHITECTURE.md`

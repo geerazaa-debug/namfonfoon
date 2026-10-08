@@ -1,0 +1,521 @@
+{
+ "meta": {
+  "source": "BMA DDS frd_dds (data.bangkok.go.th, CC BY), 2022-2025, main roads patrolled by DDS only",
+  "hotspot_rule": "flood_days >= 75% quantile across 50 districts = 25",
+  "dds_event_rain_mm": {
+   "p10": 36.0,
+   "p25": 49.0,
+   "p50": 67.0
+  }
+ },
+ "districts": {
+  "บางบอน": {
+   "en": "Bang Bon",
+   "flood_days_2022_2025": 16,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "เอกชัย",
+    "บางขุนเทียน",
+    "บางบอน 1"
+   ],
+   "hotspot": false
+  },
+  "บางกะปิ": {
+   "en": "Bang Kapi",
+   "flood_days_2022_2025": 16,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "รามคำแหง",
+    "ศรีนครินทร์",
+    "หัวหมาก"
+   ],
+   "hotspot": false
+  },
+  "บางแค": {
+   "en": "Bang Khae",
+   "flood_days_2022_2025": 16,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "เพชรเกษม",
+    "หมู่บ้านเศรษฐกิจ",
+    "เพชรเกษม (ซอย 69 อินทาปัจ) (หนองแขม)"
+   ],
+   "hotspot": false
+  },
+  "บางเขน": {
+   "en": "Bang Khen",
+   "flood_days_2022_2025": 31,
+   "median_depth_cm": 10.0,
+   "top_roads": [
+    "แจ้งวัฒนะ",
+    "พหลโยธิน",
+    "รามอินทรา"
+   ],
+   "hotspot": true
+  },
+  "บางคอแหลม": {
+   "en": "Bang Kho Laem",
+   "flood_days_2022_2025": 2,
+   "median_depth_cm": 20.0,
+   "top_roads": [
+    "ตก",
+    "เจริญกรุง",
+    "พระรามที่ 3"
+   ],
+   "hotspot": false
+  },
+  "บางขุนเทียน": {
+   "en": "Bang Khun Thian",
+   "flood_days_2022_2025": 12,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "บางกระดี่",
+    "ท่าข้าม"
+   ],
+   "hotspot": false
+  },
+  "บางนา": {
+   "en": "Bang Na",
+   "flood_days_2022_2025": 25,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "สุขุมวิท",
+    "บางนา-ตราด",
+    "สุขุมวิท 103"
+   ],
+   "hotspot": true
+  },
+  "บางพลัด": {
+   "en": "Bang Phlat",
+   "flood_days_2022_2025": 2,
+   "median_depth_cm": 12.5,
+   "top_roads": [
+    "จรัญสนิทวงศ์"
+   ],
+   "hotspot": false
+  },
+  "บางรัก": {
+   "en": "Bang Rak",
+   "flood_days_2022_2025": 15,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "สุรวงศ์",
+    "ศาลาแดง",
+    "สุรศักดิ์"
+   ],
+   "hotspot": false
+  },
+  "บางซื่อ": {
+   "en": "Bang Sue",
+   "flood_days_2022_2025": 8,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "ประชาราษฎร์2",
+    "ประชาราษฎร์",
+    "ประชาราษฎร์1"
+   ],
+   "hotspot": false
+  },
+  "บางกอกน้อย": {
+   "en": "Bangkok Noi",
+   "flood_days_2022_2025": 7,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "อิสรภาพ"
+   ],
+   "hotspot": false
+  },
+  "บางกอกใหญ่": {
+   "en": "Bangkok Yai",
+   "flood_days_2022_2025": 1,
+   "median_depth_cm": 10.0,
+   "top_roads": [
+    "เพชรเกษม"
+   ],
+   "hotspot": false
+  },
+  "บึงกุ่ม": {
+   "en": "Bueng Kum",
+   "flood_days_2022_2025": 27,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "นวมินทร์",
+    "ประเสริฐมนูกิจ"
+   ],
+   "hotspot": true
+  },
+  "จตุจักร": {
+   "en": "Chatuchak",
+   "flood_days_2022_2025": 29,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "รัชดาภิเษก",
+    "พหลโยธิน",
+    "เทศบาลสงเคราะห์"
+   ],
+   "hotspot": true
+  },
+  "จอมทอง": {
+   "en": "Chom Thong",
+   "flood_days_2022_2025": 6,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "จอมทอง"
+   ],
+   "hotspot": false
+  },
+  "ดินแดง": {
+   "en": "Din Daeng",
+   "flood_days_2022_2025": 46,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "ประชาสงเคราะห์",
+    "รัชดาภิเษก",
+    "ประชาสุข"
+   ],
+   "hotspot": true
+  },
+  "ดอนเมือง": {
+   "en": "Don Mueang",
+   "flood_days_2022_2025": 15,
+   "median_depth_cm": 10.0,
+   "top_roads": [
+    "ช่างอากาศอุทิศ",
+    "วิภาวดีรังสิต",
+    "พหลโยธิน"
+   ],
+   "hotspot": false
+  },
+  "ดุสิต": {
+   "en": "Dusit",
+   "flood_days_2022_2025": 5,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "ราชวิถี",
+    "สามเสน",
+    "นครไชยศรี"
+   ],
+   "hotspot": false
+  },
+  "ห้วยขวาง": {
+   "en": "Huai Khwang",
+   "flood_days_2022_2025": 20,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "เพชรบุรี",
+    "ประชาราษฎร์บำเพ็ญ",
+    "ประชาอุทิศ"
+   ],
+   "hotspot": false
+  },
+  "คันนายาว": {
+   "en": "Khan Na Yao",
+   "flood_days_2022_2025": 2,
+   "median_depth_cm": 12.5,
+   "top_roads": [
+    "เสรีไทย"
+   ],
+   "hotspot": false
+  },
+  "คลองสามวา": {
+   "en": "Khlong Sam Wa",
+   "flood_days_2022_2025": 0,
+   "median_depth_cm": null,
+   "top_roads": [],
+   "hotspot": false
+  },
+  "คลองสาน": {
+   "en": "Khlong San",
+   "flood_days_2022_2025": 9,
+   "median_depth_cm": 12.5,
+   "top_roads": [
+    "ลาดหญ้า",
+    "เจริญนคร"
+   ],
+   "hotspot": false
+  },
+  "คลองเตย": {
+   "en": "Khlong Toei",
+   "flood_days_2022_2025": 35,
+   "median_depth_cm": 20.0,
+   "top_roads": [
+    "สุขุมวิท",
+    "พระรามที่4",
+    "พระราม 4"
+   ],
+   "hotspot": true
+  },
+  "หลักสี่": {
+   "en": "Lak Si",
+   "flood_days_2022_2025": 42,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "แจ้งวัฒนะ",
+    "งามวงศ์วาน",
+    "วิภาวดีรังสิต"
+   ],
+   "hotspot": true
+  },
+  "ลาดกระบัง": {
+   "en": "Lat Krabang",
+   "flood_days_2022_2025": 22,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "ลาดกระบัง",
+    "หลวงแพ่ง",
+    "ฉลองกรุง"
+   ],
+   "hotspot": false
+  },
+  "ลาดพร้าว": {
+   "en": "Lat Phrao",
+   "flood_days_2022_2025": 15,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "โชคชัย 4",
+    "สุคนธสวัสดิ์",
+    "นาคนิวาส"
+   ],
+   "hotspot": false
+  },
+  "มีนบุรี": {
+   "en": "Min Buri",
+   "flood_days_2022_2025": 5,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "สุวินทวงศ์",
+    "รามอินทรา",
+    "สีหบุรานุกิจ"
+   ],
+   "hotspot": false
+  },
+  "หนองจอก": {
+   "en": "Nong Chok",
+   "flood_days_2022_2025": 0,
+   "median_depth_cm": null,
+   "top_roads": [],
+   "hotspot": false
+  },
+  "หนองแขม": {
+   "en": "Nong Khaem",
+   "flood_days_2022_2025": 2,
+   "median_depth_cm": 22.5,
+   "top_roads": [
+    "เลียบคลองภาษีเจริญฝั่งเหนือ"
+   ],
+   "hotspot": false
+  },
+  "ปทุมวัน": {
+   "en": "Pathum Wan",
+   "flood_days_2022_2025": 8,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "พระราม1",
+    "ราชดำริ",
+    "เพลินจิต"
+   ],
+   "hotspot": false
+  },
+  "ภาษีเจริญ": {
+   "en": "Phasi Charoen",
+   "flood_days_2022_2025": 6,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "เพชรเกษม"
+   ],
+   "hotspot": false
+  },
+  "พญาไท": {
+   "en": "Phaya Thai",
+   "flood_days_2022_2025": 17,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "พหลโยธิน",
+    "ประดิพัทธ์",
+    "วิภาวดีรังสิต"
+   ],
+   "hotspot": false
+  },
+  "พระโขนง": {
+   "en": "Phra Khanong",
+   "flood_days_2022_2025": 14,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "สุขุมวิท101/1",
+    "สุขุมวิท 101/1",
+    "สุขุมวิท"
+   ],
+   "hotspot": false
+  },
+  "พระนคร": {
+   "en": "Phra Nakhon",
+   "flood_days_2022_2025": 9,
+   "median_depth_cm": 20.0,
+   "top_roads": [
+    "สนามไชย",
+    "ราชดำเนินใน",
+    "มหาราช"
+   ],
+   "hotspot": false
+  },
+  "ป้อมปราบศัตรูพ่าย": {
+   "en": "Pom Prap Sattru Phai",
+   "flood_days_2022_2025": 4,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "หลานหลวง",
+    "เสือป่า"
+   ],
+   "hotspot": false
+  },
+  "ประเวศ": {
+   "en": "Prawet",
+   "flood_days_2022_2025": 24,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "เฉลิมพระเกียรติ ร.๙",
+    "อ่อนนุช",
+    "ศรีนครินทร์"
+   ],
+   "hotspot": false
+  },
+  "ราษฎร์บูรณะ": {
+   "en": "Rat Burana",
+   "flood_days_2022_2025": 1,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "สุขสวัสดิ์"
+   ],
+   "hotspot": false
+  },
+  "ราชเทวี": {
+   "en": "Ratchathewi",
+   "flood_days_2022_2025": 36,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "ศรีอยุธยา",
+    "พญาไท",
+    "บรรทัดทอง"
+   ],
+   "hotspot": true
+  },
+  "สายไหม": {
+   "en": "Sai Mai",
+   "flood_days_2022_2025": 30,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "พหลโยธิน",
+    "สุขาภิบาล 5",
+    "สุขาภิบาล5"
+   ],
+   "hotspot": true
+  },
+  "สัมพันธวงศ์": {
+   "en": "Samphanthawong",
+   "flood_days_2022_2025": 5,
+   "median_depth_cm": 12.5,
+   "top_roads": [
+    "เยาวราช",
+    "เจริญกรุง",
+    "ราชวงศ์"
+   ],
+   "hotspot": false
+  },
+  "สะพานสูง": {
+   "en": "Saphan Sung",
+   "flood_days_2022_2025": 0,
+   "median_depth_cm": null,
+   "top_roads": [],
+   "hotspot": false
+  },
+  "สาทร": {
+   "en": "Sathon",
+   "flood_days_2022_2025": 28,
+   "median_depth_cm": 20.0,
+   "top_roads": [
+    "สาธุประดิษฐ์",
+    "สวนพลู",
+    "จันทน์"
+   ],
+   "hotspot": true
+  },
+  "สวนหลวง": {
+   "en": "Suan Luang",
+   "flood_days_2022_2025": 30,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "พัฒนาการ",
+    "ศรีนครินทร์",
+    "รามคำแหง"
+   ],
+   "hotspot": true
+  },
+  "ตลิ่งชัน": {
+   "en": "Taling Chan",
+   "flood_days_2022_2025": 4,
+   "median_depth_cm": 17.5,
+   "top_roads": [
+    "พุทธมณฑลสาย 1",
+    "เลียบทางรถไฟสายใต้๑",
+    "เข้าคลองศาลเจ้า"
+   ],
+   "hotspot": false
+  },
+  "ทวีวัฒนา": {
+   "en": "Thawi Watthana",
+   "flood_days_2022_2025": 0,
+   "median_depth_cm": null,
+   "top_roads": [],
+   "hotspot": false
+  },
+  "ธนบุรี": {
+   "en": "Thon Buri",
+   "flood_days_2022_2025": 1,
+   "median_depth_cm": 30.0,
+   "top_roads": [
+    "เจริญนคร"
+   ],
+   "hotspot": false
+  },
+  "ทุ่งครุ": {
+   "en": "Thung Khru",
+   "flood_days_2022_2025": 0,
+   "median_depth_cm": null,
+   "top_roads": [],
+   "hotspot": false
+  },
+  "วัฒนา": {
+   "en": "Vadhana",
+   "flood_days_2022_2025": 46,
+   "median_depth_cm": 20.0,
+   "top_roads": [
+    "สุขุมวิท",
+    "สุขุมวิท 71",
+    "สุขุมวิท 21(อโศก)"
+   ],
+   "hotspot": true
+  },
+  "วังทองหลาง": {
+   "en": "Wang Thonglang",
+   "flood_days_2022_2025": 28,
+   "median_depth_cm": 15.0,
+   "top_roads": [
+    "ลาดพร้าว",
+    "ประดิษฐ์มนูธรรม",
+    "รามคำแหง"
+   ],
+   "hotspot": true
+  },
+  "ยานนาวา": {
+   "en": "Yan Nawa",
+   "flood_days_2022_2025": 6,
+   "median_depth_cm": 20.0,
+   "top_roads": [
+    "สาธุประดิษฐ์",
+    "พระราม 3",
+    "นางลิ้นจี่"
+   ],
+   "hotspot": false
+  }
+ }
+}

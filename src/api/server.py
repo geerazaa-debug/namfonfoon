@@ -18,12 +18,12 @@ from src.alerts.line_notifier import verify_signature
 from src.config import settings
 from src.data.validator import GeoPoint
 from src.engine.geofence import FloodZone, ZoneHit, zones_near_point, zones_on_route
-from src.engine.risk_analyzer import RiskAnalyzer, RiskAssessment, RiskInput
+from src.engine.risk_analyzer import AlertInput, Assessment, RuleBasedAnalyzer
 
 log = logging.getLogger(__name__)
 
-app = FastAPI(title="FloodWatch AI Engine", version="0.1.0")
-analyzer = RiskAnalyzer()
+app = FastAPI(title="FloodWatch Rain Advisory", version="0.2.0")
+analyzer = RuleBasedAnalyzer()
 ZONES: dict[str, FloodZone] = {}
 SUBSCRIBERS: dict[str, GeoPoint] = {}  # LINE userId -> last shared location
 
@@ -50,7 +50,7 @@ def health() -> dict[str, str]:
 
 
 @app.post("/v1/risk/assess", dependencies=[Depends(require_api_key)])
-def assess(inp: RiskInput) -> RiskAssessment:
+def assess(inp: AlertInput) -> Assessment:
     return analyzer.assess(inp)
 
 

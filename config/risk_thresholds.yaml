@@ -1,23 +1,28 @@
-# Risk score is 0-100. Weights are UNCALIBRATED placeholders - they must be
-# fitted/validated against historical flood events before any public alerting.
-weights:
-  satellite_water: 0.40   # fraction of nearby pixels flagged as water by satellite
-  low_elevation: 0.25     # how low the point sits vs its surroundings
-  rainfall: 0.15          # 24h accumulated rainfall
-  water_level_trend: 0.20 # projected sensor water level vs warning level
-  tide: 0.0               # downstream tide/river stage; 0 until calibrated (Step 2 Amendment 1)
+# Rule-based rain advisory thresholds. NOT a validated flood predictor.
+# Step 4 backtest (docs/step4_backtest_result.md): no model beat rain-only, and rain-only
+# itself was weak (PR-AUC 0.17 vs base rate 0.067). Expect many false alarms.
 
-normalization:
-  rainfall_mm_24h_max: 150.0     # rainfall at/above this saturates the factor
-  low_elevation_scale_m: 3.0     # metres below local mean that saturates the factor
-  projection_horizon_h: 3.0      # hours ahead for water-level extrapolation
+# Rolling 6 h accumulation (median DDS flood-event rain duration is 4 h).
+# Anchored on BMA DDS recorded-flood event rainfall 2022-2025 (n=1,434):
+# 90% / 75% / 50% of recorded road floods had at least this much rain.
+rain_6h_mm:
+  moderate: 36   # p10
+  high: 49       # p25
+  critical: 67   # p50
 
-levels:  # lower bound of score (inclusive), checked highest first
-  critical: 75
-  high: 55
-  moderate: 30
-  low: 0
+# 1 h intensity. 60 mm/h is the commonly cited BMA drainage design capacity (unverified).
+rain_1h_mm:
+  moderate: 10
+  high: 30
+  critical: 60
+
+# Districts in the top quartile of DDS flood days (config/district_hotspots.json) are
+# raised one level when rain is already at least moderate (never above critical).
+hotspot_escalation: true
+
+# Ignore rain observations older than this (no alert on stale data).
+max_obs_age_min: 90
 
 alerts:
   min_level_to_notify: high
-  cooldown_min: 60   # do not re-alert the same user for the same zone within this window
+  cooldown_min: 60   # applied by the alert dispatcher (not built yet)

@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 
 from src.data.validator import GeoPoint
 from src.engine.geofence import ZoneHit
-from src.engine.risk_analyzer import RiskLevel
+from src.engine.risk_analyzer import Assessment, RiskLevel
 
 LEVEL_COLORS: dict[str, str] = {
     RiskLevel.LOW: "#2E7D32",
@@ -91,5 +91,37 @@ def build_flood_alert(hit: ZoneHit, user_location: GeoPoint, detour_url: str | N
                 ],
             },
             "footer": {"type": "box", "layout": "vertical", "spacing": "sm", "contents": footer},
+        },
+    }
+
+
+def build_rain_alert(a: Assessment) -> dict[str, Any]:
+    """Flex card for a rule-based rain advisory. Wording must not claim a flood prediction."""
+    color = LEVEL_COLORS.get(a.level, "#455A64")
+    level_th = LEVEL_TH.get(a.level, a.level)
+    where = f"เขต{a.district.th}" if a.district else "พื้นที่ของคุณ"
+    rain = f"ฝน 1 ชม. {a.rain_1h_mm:.0f} มม." if a.rain_1h_mm is not None else "ไม่มีข้อมูลฝนล่าสุด"
+    if a.rain_6h_mm is not None:
+        rain += f" · สะสม 6 ชม. {a.rain_6h_mm:.0f} มม."
+    body = [text(f"{where}: {rain}", weight="bold")]
+    if a.district and a.district.hotspot:
+        roads = ", ".join(a.district.top_roads)
+        body.append(text(f"เขตนี้มีถนนน้ำท่วมขังบ่อย (สถิติ กทม. 2565-68): {roads}", size="sm"))
+    body.append(
+        text("คำเตือนเชิงแนะนำจากปริมาณฝน ไม่ใช่การพยากรณ์น้ำท่วม · ข้อมูลจุดน้ำท่วม: สำนักการระบายน้ำ กทม.",
+             size="xs", color="#666666")
+    )  # fmt: skip
+    return {
+        "type": "flex",
+        "altText": f"เตือนฝนตกหนัก ระดับ{level_th}: {where} {rain}"[:400],
+        "contents": {
+            "type": "bubble",
+            "header": {
+                "type": "box",
+                "layout": "vertical",
+                "backgroundColor": color,
+                "contents": [text(f"🌧 เตือนฝนตกหนัก: {level_th}", weight="bold", color="#FFFFFF", size="lg")],
+            },
+            "body": {"type": "box", "layout": "vertical", "spacing": "sm", "contents": body},
         },
     }

@@ -1,20 +1,22 @@
-"""Flood risk scoring.
+"""Rule-based rain advisory.
 
-Transparent weighted-factor model, not a trained ML model. Weights in
-config/risk_thresholds.yaml are uncalibrated until backtested against
-historical flood events.
+Not a predictive model: Step 4 showed no tested model beats rain-only, and rain-only is weak.
+Levels come from rain thresholds in config/risk_thresholds.yaml (anchored on BMA DDS
+recorded-flood rainfall), optionally raised one level in DDS flood-hotspot districts.
 """
 
 from __future__ import annotations
 
-from datetime import datetime
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator
 
 from src.config import risk_thresholds
 from src.data.validator import GeoPoint
+from src.engine.districts import DistrictIndex, DistrictInfo, district_index
 
 
 class RiskLevel(StrEnum):
@@ -28,105 +30,90 @@ class RiskLevel(StrEnum):
         return list(RiskLevel).index(self)
 
 
-class WaterLevelObs(BaseModel):
-    timestamp: datetime
-    level_m: float
+class RainObservation(BaseModel):
+    """One nearby rain source (gauge or radar cell) covering the user's location."""
+
+    source_id: str
+    observed_at: datetime
+    rain_1h_mm: float = Field(ge=0)
+    rain_6h_mm: float | None = Field(default=None, ge=0)
+
+    @field_validator("observed_at")
+    @classmethod
+    def _aware(cls, v: datetime) -> datetime:
+        if v.tzinfo is None:
+            raise ValueError("observed_at must be timezone-aware")
+        return v
 
 
-class RiskInput(BaseModel):
+class AlertInput(BaseModel):
     location: GeoPoint
-    satellite_water_fraction: float = Field(ge=0, le=1)
-    low_lying_factor: float = Field(ge=0, le=1)
-    rainfall_mm_24h: float = Field(ge=0)
-    water_levels: list[WaterLevelObs] = []
-    warning_level_m: float | None = Field(default=None, gt=0)
-    # Downstream Chao Phraya / tide gauge stage (MSL m) and its bank or critical level.
-    # Separates tidal/river-stage overflow from rain-driven (pluvial) flooding.
-    tide_level_m: float | None = None
-    tide_reference_m: float | None = Field(default=None, gt=0)
-
-    @model_validator(mode="after")
-    def _levels_need_reference(self) -> RiskInput:
-        if self.water_levels and self.warning_level_m is None:
-            raise ValueError("warning_level_m is required when water_levels are given")
-        if (self.tide_level_m is None) != (self.tide_reference_m is None):
-            raise ValueError("tide_level_m and tide_reference_m must be given together")
-        return self
+    rain: list[RainObservation] = Field(default_factory=list, max_length=100)
 
 
-class RiskAssessment(BaseModel):
+class Assessment(BaseModel):
     location: GeoPoint
-    score: float = Field(ge=0, le=100)
+    district: DistrictInfo | None
     level: RiskLevel
-    factors: dict[str, float]
-    rise_rate_m_per_h: float | None = None
-    projected_level_m: float | None = None
+    notify: bool
+    stale: bool
+    rain_1h_mm: float | None
+    rain_6h_mm: float | None
+    reasons: list[str]
 
 
-def rise_rate_m_per_h(obs: list[WaterLevelObs]) -> float | None:
-    """Least-squares slope of level vs time. None if < 2 points or zero time span."""
-    if len(obs) < 2:
-        return None
-    ts = [o.timestamp.timestamp() / 3600 for o in obs]
-    ys = [o.level_m for o in obs]
-    tm, ym = sum(ts) / len(ts), sum(ys) / len(ys)
-    var = sum((t - tm) ** 2 for t in ts)
-    if var == 0:
-        return None
-    return sum((t - tm) * (y - ym) for t, y in zip(ts, ys, strict=False)) / var
-
-
-FACTORS = frozenset({"satellite_water", "low_elevation", "rainfall", "water_level_trend", "tide"})
-
-
-class RiskAnalyzer:
-    def __init__(self, cfg: dict[str, Any] | None = None) -> None:
-        cfg = cfg or risk_thresholds()
-        self.weights: dict[str, float] = cfg["weights"]
-        self.norm: dict[str, float] = cfg["normalization"]
-        self.levels = sorted(
-            ((RiskLevel(name), float(lo)) for name, lo in cfg["levels"].items()), key=lambda x: x[1], reverse=True
-        )
-        if set(self.weights) != FACTORS:
-            raise ValueError(f"risk weights must cover exactly {sorted(FACTORS)}")
-        total = sum(self.weights.values())
-        if abs(total - 1.0) > 1e-6:
-            raise ValueError(f"risk weights must sum to 1.0, got {total}")
-
-    def level_for(self, score: float) -> RiskLevel:
-        for level, lo in self.levels:
-            if score >= lo:
-                return level
+def level_from(value: float | None, table: dict[str, float]) -> RiskLevel:
+    if value is None:
         return RiskLevel.LOW
+    for level in (RiskLevel.CRITICAL, RiskLevel.HIGH, RiskLevel.MODERATE):
+        if value >= table[level.value]:
+            return level
+    return RiskLevel.LOW
 
-    def assess(self, inp: RiskInput) -> RiskAssessment:
-        rain = min(1.0, inp.rainfall_mm_24h / self.norm["rainfall_mm_24h_max"])
 
-        rate = projected = None
-        trend = 0.0
-        if inp.water_levels and inp.warning_level_m is not None:
-            latest = max(inp.water_levels, key=lambda o: o.timestamp)
-            rate = rise_rate_m_per_h(inp.water_levels)
-            projected = latest.level_m + max(0.0, rate or 0.0) * self.norm["projection_horizon_h"]
-            trend = max(0.0, min(1.0, projected / inp.warning_level_m))
+class RuleBasedAnalyzer:
+    def __init__(
+        self,
+        cfg: dict[str, Any] | None = None,
+        districts: DistrictIndex | None = None,
+        now: Callable[[], datetime] = lambda: datetime.now(UTC),
+    ) -> None:
+        cfg = cfg or risk_thresholds()
+        self.t1h: dict[str, float] = cfg["rain_1h_mm"]
+        self.t6h: dict[str, float] = cfg["rain_6h_mm"]
+        for name, t in (("rain_1h_mm", self.t1h), ("rain_6h_mm", self.t6h)):
+            if not t["moderate"] < t["high"] < t["critical"]:
+                raise ValueError(f"{name} thresholds must increase moderate < high < critical")
+        self.escalate = bool(cfg["hotspot_escalation"])
+        self.max_age = timedelta(minutes=cfg["max_obs_age_min"])
+        self.min_notify = RiskLevel(cfg["alerts"]["min_level_to_notify"])
+        self.districts = districts or district_index()
+        self.now = now
 
-        tide = 0.0
-        if inp.tide_level_m is not None and inp.tide_reference_m is not None:
-            tide = max(0.0, min(1.0, inp.tide_level_m / inp.tide_reference_m))
+    def assess(self, inp: AlertInput) -> Assessment:
+        district = self.districts.locate(inp.location)
+        fresh = [o for o in inp.rain if self.now() - o.observed_at <= self.max_age]
+        if not fresh:
+            return Assessment(
+                location=inp.location, district=district, level=RiskLevel.LOW, notify=False, stale=True,
+                rain_1h_mm=None, rain_6h_mm=None, reasons=["no fresh rain observation"],
+            )  # fmt: skip
 
-        factors = {
-            "satellite_water": inp.satellite_water_fraction,
-            "low_elevation": inp.low_lying_factor,
-            "rainfall": rain,
-            "water_level_trend": trend,
-            "tide": tide,
-        }
-        score = round(100 * sum(self.weights[k] * v for k, v in factors.items()), 2)
-        return RiskAssessment(
-            location=inp.location,
-            score=score,
-            level=self.level_for(score),
-            factors=factors,
-            rise_rate_m_per_h=rate,
-            projected_level_m=projected,
-        )
+        r1 = max(o.rain_1h_mm for o in fresh)
+        six = [o.rain_6h_mm for o in fresh if o.rain_6h_mm is not None]
+        r6 = max(six) if six else None
+        l1, l6 = level_from(r1, self.t1h), level_from(r6, self.t6h)
+        level = max(l1, l6, key=lambda lv: lv.rank)
+        reasons = [f"rain_1h {r1:.0f} mm -> {l1}"] + ([f"rain_6h {r6:.0f} mm -> {l6}"] if r6 is not None else [])
+
+        if self.escalate and district and district.hotspot and RiskLevel.MODERATE.rank <= level.rank:
+            if level is not RiskLevel.CRITICAL:
+                level = list(RiskLevel)[level.rank + 1]
+                reasons.append(
+                    f"DDS flood hotspot district ({district.flood_days_2022_2025} flood days 2022-25) -> {level}"
+                )
+
+        return Assessment(
+            location=inp.location, district=district, level=level, notify=level.rank >= self.min_notify.rank,
+            stale=False, rain_1h_mm=r1, rain_6h_mm=r6, reasons=reasons,
+        )  # fmt: skip

@@ -1,12 +1,14 @@
-# FloodWatch AI Engine — Project Rules
+# FloodWatch — Project Rules
 
-Hyper-local flood risk scoring (NASA EONET/CMR + DEM + local sensors) with LINE alerts and a B2B routing API.
+Rule-based heavy-rain advisory for Bangkok districts (rain thresholds + BMA DDS flood-hotspot stats) with LINE alerts and a B2B API. Read `docs/ARCHITECTURE.md` first.
 
 ## Commands
 - Setup: `python -m venv .venv && .venv/Scripts/python -m pip install -r requirements.txt`
 - Test: `.venv/Scripts/python -m pytest -q`
 - Lint: `.venv/Scripts/python -m ruff check . && .venv/Scripts/python -m ruff format --check .`
 - Run API: `.venv/Scripts/python -m uvicorn src.api.server:app --reload`
+- Research deps: `.venv/Scripts/python -m pip install -r requirements-research.txt`
+- Rebuild district/hotspot config: `.venv/Scripts/python -m research.build_hotspots`
 
 ## Hard rules
 1. **Zero secrets in git.** Keys come from env vars only (`.env`, gitignored). Never put a key, token, channel secret, or real LINE userId in code, YAML, tests, logs, or commit messages. Tests use obvious fakes (`"tok"`, `"k1"`).
@@ -19,12 +21,16 @@ Hyper-local flood risk scoring (NASA EONET/CMR + DEM + local sensors) with LINE 
 8. **Privacy.** User locations and LINE userIds are personal data: never log them; store only what alerting needs.
 
 ## Honesty constraints
-- `RiskAnalyzer` is a weighted-factor heuristic, **not** a trained model. Weights in `config/risk_thresholds.yaml` are uncalibrated. Do not describe it as "AI prediction" in user-facing text, or enable public alerts, until it has been backtested against historical flood events (e.g. Bangkok 2011, 2021–2025 seasons) with a pre-registered pass criterion.
+- **The system is a rule-based rain advisory, not a flood predictor.** Step 4 (`docs/step4_backtest_result.md`): the multi-factor model did not beat rain-only (PR-AUC 0.148 vs 0.171), and rain-only itself is weak. Never call it "AI", "prediction" or "forecast" in user-facing text. Alert cards must say it is an advisory based on rainfall.
+- The predictive path is **paused**. Reviving it requires dense rain data (BMA gauges or radar QPE), a bare-earth DEM (FABDEM), and a **new pre-registered test on the 2026 season**. The 2025 holdout is spent.
+- Any new model claim needs a pre-registration committed before the data is analysed. No post-hoc threshold or feature changes on a spent holdout.
+- Data licences: DDS and geoBoundaries are CC BY (attribution required). Traffy and ThaiWater are unstated, so no commercial or B2B use without written permission.
 - `local_sensors.py` assumes a placeholder JSON schema until a real provider is wired.
 
 ## Layout
 - `src/data/` ingestion (NASA, sensors) + `validator.py` (GeoPoint, BoundingBox, integrity checks)
-- `src/engine/` elevation, risk scoring, geofencing — pure, sync, no I/O
+- `src/engine/` rule-based analyzer, district lookup, geofencing (live); elevation mapper (paused): pure, sync, no I/O
+- `research/` offline studies and pre-registrations (results in `docs/step*_*.md`); never imported by `src/`
 - `src/alerts/` LINE push + Flex card builder
 - `src/api/server.py` FastAPI: `/webhook/line` (signature-verified), `/v1/*` (X-API-Key)
 
