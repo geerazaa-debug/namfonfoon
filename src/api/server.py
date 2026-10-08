@@ -6,15 +6,19 @@ persistent store before deploying more than one worker.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
 import secrets
+from collections.abc import AsyncIterator
+from contextlib import AsyncExitStack, asynccontextmanager
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from src.alerts.line_notifier import verify_signature
+from src.alerts.dispatcher import AlertPipeline, default_fetch
+from src.alerts.line_notifier import LineNotifier, verify_signature
 from src.config import settings
 from src.data.validator import GeoPoint
 from src.engine.geofence import FloodZone, ZoneHit, zones_near_point, zones_on_route
@@ -22,10 +26,37 @@ from src.engine.risk_analyzer import AlertInput, Assessment, RuleBasedAnalyzer
 
 log = logging.getLogger(__name__)
 
-app = FastAPI(title="FloodWatch Rain Advisory", version="0.2.0")
 analyzer = RuleBasedAnalyzer()
 ZONES: dict[str, FloodZone] = {}
 SUBSCRIBERS: dict[str, GeoPoint] = {}  # LINE userId -> last shared location
+pipeline: AlertPipeline | None = None
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    """Start the rain poller when POLLER_ENABLED=1. Without a LINE token it runs dry (assess, never push)."""
+    global pipeline
+    if os.environ.get("POLLER_ENABLED") != "1":
+        yield
+        return
+    async with AsyncExitStack() as stack:
+        send = None
+        if os.environ.get("LINE_CHANNEL_ACCESS_TOKEN"):
+            send = (await stack.enter_async_context(LineNotifier())).push
+        else:
+            log.warning("LINE_CHANNEL_ACCESS_TOKEN not set: rain poller runs in dry mode")
+        pipeline = AlertPipeline(fetch=default_fetch(), subscribers=SUBSCRIBERS, send=send, analyzer=analyzer)
+        stop = asyncio.Event()
+        task = asyncio.create_task(pipeline.run_forever(settings()["rain_pipeline"]["poll_interval_min"] * 60, stop))
+        try:
+            yield
+        finally:
+            stop.set()
+            await task
+            pipeline = None
+
+
+app = FastAPI(title="FloodWatch Rain Advisory", version="0.2.0", lifespan=lifespan)
 
 
 def require_api_key(x_api_key: str = Header(default="")) -> None:
@@ -79,4 +110,6 @@ async def line_webhook(request: Request, x_line_signature: str = Header(default=
             log.info("registered location for subscriber")  # never log userId/coords
         elif ev.get("type") == "unfollow" and user_id:
             SUBSCRIBERS.pop(user_id, None)
+            if pipeline is not None:
+                pipeline.cooldown.forget_user(user_id)
     return {"status": "ok"}

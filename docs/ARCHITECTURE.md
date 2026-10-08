@@ -49,6 +49,8 @@ rain observations (gauge / radar, per user location)        config/risk_threshol
 | `src/engine/districts.py` | **Live:** point → district + hotspot info |
 | `src/alerts/payload_builder.py` | **Live:** `build_rain_alert` (rain advisory card). `build_flood_alert` is for geofenced zones |
 | `src/alerts/line_notifier.py` | **Live:** push with retry key, webhook signature check |
+| `src/alerts/dispatcher.py` | **Live:** `AlertPipeline` poller + `CooldownTracker` |
+| `src/data/thaiwater_rain.py` | **Live:** ThaiWater client + rolling 6 h `RainAccumulator` |
 | `src/api/server.py` | **Live:** `/v1/risk/assess`, zones/route endpoints, LINE webhook |
 | `src/engine/geofence.py` | Live utility (zones/routes). No zone producer yet |
 | `src/data/nasa_client.py` | Paused: satellite factor NO-GO (no usable monsoon history) |
@@ -56,15 +58,37 @@ rain observations (gauge / radar, per user location)        config/risk_threshol
 | `src/data/local_sensors.py` | Placeholder schema |
 | `research/` | Offline studies + `build_hotspots.py` (regenerates the config tables) |
 
+## Live pipeline (v0.2.1)
+```
+every 15 min (POLLER_ENABLED=1, FastAPI lifespan)
+ThaiWater public/rain_24h ──► RainAccumulator (per-station hourly rain_1h, 24 h memory)
+                                 │ rain_6h = sum of last 6 hourly slots (needs ≥ 5 present)
+                                 ▼
+subscribers (LINE location) ──► near(): stations ≤ 5 km, else nearest ≤ 10 km
+                                 ▼
+                         RuleBasedAnalyzer ──► notify?
+                                 ▼
+               CooldownTracker: key (user, district), 180 min; level increase bypasses
+                                 ▼
+                 build_rain_alert ──► LineNotifier.push (retry key); failure → retried next poll
+```
+- With no `LINE_CHANNEL_ACCESS_TOKEN`, the pipeline runs **dry**: it assesses and logs counts, and never pushes.
+- Live check 2026-10-08: 34 ThaiWater stations in the area of interest; 49/50 district points have a station within 5 km or a fallback within 10 km.
+
+### Known limitations
+- **Cold start:** history is in memory, so after a restart the 6 h rule is inactive for ~4–5 hours (1 h rule only).
+- Subscribers and cooldown state are in memory: they are lost on restart, and only a single worker is supported.
+- ThaiWater licence is not stated: fine for a free public advisory, but needs permission before any paid or B2B use.
+- LINE push quota: the free plan has a small monthly message limit. Check it before onboarding users.
+
 ## Not built yet
-1. **Live rain source.** ThaiWater `thailand_main` exposes `rain_1h` and `rain_24h` per station but not `rain_6h`. Radar QPE (TMD/BMA) access is unverified. The engine takes `RainObservation` from any source.
-2. Poller/scheduler + per-user cooldown (`alerts.cooldown_min`).
-3. Persistent subscriber store (currently in-memory).
+1. Persistent store for subscribers, cooldown and rain history (fixes the cold start).
+2. Radar QPE input (access unverified, see `docs/bma_data_request_draft.md`).
 
 ## Path back to prediction (paused)
 Preconditions before a new pre-registered test:
 - Dense rain data: a BMA DDS gauge network history (official request) or radar QPE.
-- A bare-earth DEM (FABDEM).
+- A bare-earth DEM. **FABDEM is CC BY-NC-SA (no commercial use)**, so for B2B use the BMA DTM/LiDAR requested in `docs/bma_data_request_draft.md`.
 - A new holdout: the 2026 monsoon season, used once.
 
 ## Data licences

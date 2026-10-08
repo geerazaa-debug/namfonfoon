@@ -25,4 +25,4 @@ max_obs_age_min: 90
 
 alerts:
   min_level_to_notify: high
-  cooldown_min: 60   # applied by the alert dispatcher (not built yet)
+  cooldown_min: 180  # same user + district: no repeat alert within 3 h unless the level rises

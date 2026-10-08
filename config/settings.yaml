@@ -31,3 +31,16 @@ geofence:
 line:
   push_url: https://api.line.me/v2/bot/message/push
   timeout_s: 10
+
+thaiwater:
+  # Latest rain_1h + rain_24h for all ThaiWater stations (~4.6 MB, updated hourly)
+  rain_url: https://api-v3.thaiwater.net/api/v1/thaiwater30/public/rain_24h
+  timeout_s: 60
+  max_retries: 3
+
+rain_pipeline:
+  poll_interval_min: 15
+  station_radius_km: 5        # use all stations within this distance of the user
+  fallback_radius_km: 10      # else the nearest station within this distance
+  min_hours_for_6h: 5         # of the 6 hourly slots; fewer -> rain_6h unknown (1h rule only)
+  history_hours: 24

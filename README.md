@@ -9,10 +9,10 @@ Rule-based heavy-rain alerts per Bangkok district, combined with official BMA ro
 |---|---|---|
 | BMA DDS `frd_dds` road-flood records 2022–25 | District hotspot table (`config/district_hotspots.json`), rain thresholds | CC BY: "สำนักการระบายน้ำ กรุงเทพมหานคร" |
 | geoBoundaries THA ADM2 | District polygons (`config/bangkok_districts.geojson`) | CC BY 3.0 IGO |
-| Rain observations (gauge / radar), any source | Engine input `RainObservation` | live source not wired yet |
+| ThaiWater `public/rain_24h` (live, hourly) | `rain_1h` per station → rolling 6 h totals | not stated: permission needed before paid use |
 | LINE Messaging API | Push alerts, location sharing via webhook | channel token + secret |
 
-Research-only sources (ThaiWater, Traffy Fondue, NASA CMR/OPERA, Copernicus DEM) are documented in `docs/`.
+Research-only sources (ThaiWater history, Traffy Fondue, NASA CMR/OPERA, Copernicus DEM) are documented in `docs/`.
 
 ## Quick start
 ```bash
@@ -43,7 +43,10 @@ cp .env.example .env   # fill in values
 
 The 6 h thresholds are the 10th, 25th and 50th percentiles of rainfall in BMA-recorded road floods. The false-alarm rate is **unmeasured**. Values live in `config/risk_thresholds.yaml`.
 
+## Running the alert poller
+Set `POLLER_ENABLED=1` (and `LINE_CHANNEL_ACCESS_TOKEN` to actually send). Every 15 min it pulls ThaiWater rain, builds rolling 6 h totals, assesses each LINE subscriber's shared location, and pushes an advisory at **high** or above. The same user + district is not re-alerted within 3 h unless the level rises.
+
 ## Not yet built
-- Live rain source (ThaiWater `rain_1h` per station, or radar QPE: access unverified)
-- Poller + per-user cooldown, and persistent subscriber storage
+- Persistent storage (subscribers, cooldown, rain history). After a restart the 6 h rule needs ~5 h to warm up
+- Radar QPE input. A data request draft to BMA is in `docs/bma_data_request_draft.md`
 - Predictive model: paused. See "Path back to prediction" in `docs/ARCHITECTURE.md`
