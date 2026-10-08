@@ -74,7 +74,7 @@ def test_level_boundaries():
 
 def test_rejects_bad_weights():
     cfg = {
-        "weights": {"satellite_water": 0.5, "low_elevation": 0.1, "rainfall": 0.1, "water_level_trend": 0.1},
+        "weights": {"satellite_water": 0.5, "low_elevation": 0.1, "rainfall": 0.1, "water_level_trend": 0.1, "tide": 0},
         "normalization": {},
         "levels": {"low": 0},
     }
@@ -104,3 +104,27 @@ def test_elevation_low_lying_factor():
     assert m.elevation_at(P) == 0.0
     # local mean 2.25 m, point at 0 -> 2.25 / 3.0
     assert m.low_lying_factor(P, radius_km=2.0, scale_m=3.0) == pytest.approx(0.75)
+
+
+def test_weights_must_cover_all_factors():
+    cfg = {"weights": {"satellite_water": 1.0}, "normalization": {}, "levels": {"low": 0}}
+    with pytest.raises(ValueError, match="cover exactly"):
+        RiskAnalyzer(cfg)
+
+
+def test_tide_factor_reported_and_zero_weight_by_default():
+    base = dict(location=P, satellite_water_fraction=0, low_lying_factor=0, rainfall_mm_24h=0)
+    a = RiskAnalyzer().assess(RiskInput(**base, tide_level_m=1.8, tide_reference_m=2.0))
+    assert a.factors["tide"] == pytest.approx(0.9)
+    assert a.score == 0  # uncalibrated: weight 0.0 in config
+    cfg = {
+        "weights": {"satellite_water": 0, "low_elevation": 0, "rainfall": 0, "water_level_trend": 0, "tide": 1.0},
+        "normalization": {"rainfall_mm_24h_max": 150, "projection_horizon_h": 3},
+        "levels": {"low": 0, "critical": 75},
+    }
+    assert RiskAnalyzer(cfg).assess(RiskInput(**base, tide_level_m=2.5, tide_reference_m=2.0)).score == 100
+
+
+def test_tide_fields_must_be_paired():
+    with pytest.raises(ValidationError, match="together"):
+        RiskInput(location=P, satellite_water_fraction=0, low_lying_factor=0, rainfall_mm_24h=0, tide_level_m=1.0)

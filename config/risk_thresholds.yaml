@@ -5,6 +5,7 @@ weights:
   low_elevation: 0.25     # how low the point sits vs its surroundings
   rainfall: 0.15          # 24h accumulated rainfall
   water_level_trend: 0.20 # projected sensor water level vs warning level
+  tide: 0.0               # downstream tide/river stage; 0 until calibrated (Step 2 Amendment 1)
 
 normalization:
   rainfall_mm_24h_max: 150.0     # rainfall at/above this saturates the factor

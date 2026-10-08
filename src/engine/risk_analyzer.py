@@ -40,11 +40,17 @@ class RiskInput(BaseModel):
     rainfall_mm_24h: float = Field(ge=0)
     water_levels: list[WaterLevelObs] = []
     warning_level_m: float | None = Field(default=None, gt=0)
+    # Downstream Chao Phraya / tide gauge stage (MSL m) and its bank or critical level.
+    # Separates tidal/river-stage overflow from rain-driven (pluvial) flooding.
+    tide_level_m: float | None = None
+    tide_reference_m: float | None = Field(default=None, gt=0)
 
     @model_validator(mode="after")
-    def _levels_need_warning(self) -> RiskInput:
+    def _levels_need_reference(self) -> RiskInput:
         if self.water_levels and self.warning_level_m is None:
             raise ValueError("warning_level_m is required when water_levels are given")
+        if (self.tide_level_m is None) != (self.tide_reference_m is None):
+            raise ValueError("tide_level_m and tide_reference_m must be given together")
         return self
 
 
@@ -70,6 +76,9 @@ def rise_rate_m_per_h(obs: list[WaterLevelObs]) -> float | None:
     return sum((t - tm) * (y - ym) for t, y in zip(ts, ys, strict=False)) / var
 
 
+FACTORS = frozenset({"satellite_water", "low_elevation", "rainfall", "water_level_trend", "tide"})
+
+
 class RiskAnalyzer:
     def __init__(self, cfg: dict[str, Any] | None = None) -> None:
         cfg = cfg or risk_thresholds()
@@ -78,6 +87,8 @@ class RiskAnalyzer:
         self.levels = sorted(
             ((RiskLevel(name), float(lo)) for name, lo in cfg["levels"].items()), key=lambda x: x[1], reverse=True
         )
+        if set(self.weights) != FACTORS:
+            raise ValueError(f"risk weights must cover exactly {sorted(FACTORS)}")
         total = sum(self.weights.values())
         if abs(total - 1.0) > 1e-6:
             raise ValueError(f"risk weights must sum to 1.0, got {total}")
@@ -99,11 +110,16 @@ class RiskAnalyzer:
             projected = latest.level_m + max(0.0, rate or 0.0) * self.norm["projection_horizon_h"]
             trend = max(0.0, min(1.0, projected / inp.warning_level_m))
 
+        tide = 0.0
+        if inp.tide_level_m is not None and inp.tide_reference_m is not None:
+            tide = max(0.0, min(1.0, inp.tide_level_m / inp.tide_reference_m))
+
         factors = {
             "satellite_water": inp.satellite_water_fraction,
             "low_elevation": inp.low_lying_factor,
             "rainfall": rain,
             "water_level_trend": trend,
+            "tide": tide,
         }
         score = round(100 * sum(self.weights[k] * v for k, v in factors.items()), 2)
         return RiskAssessment(

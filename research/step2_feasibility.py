@@ -64,13 +64,13 @@ class Event:
     end: datetime  # last overflow hour
 
 
-def load_stations() -> list[Station]:
+def load_stations(bbox: tuple[float, float, float, float] = BBOX) -> list[Station]:
     rows = get_json(f"{TW}/waterlevel_load")["waterlevel_data"]["data"]
     out = []
     for r in rows:
         s = r["station"]
         lat, lon = float(s["tele_station_lat"] or 0), float(s["tele_station_long"] or 0)
-        if BBOX[0] <= lat <= BBOX[1] and BBOX[2] <= lon <= BBOX[3]:
+        if bbox[0] <= lat <= bbox[1] and bbox[2] <= lon <= bbox[3]:
             mb = s.get("min_bank")
             out.append(
                 Station(
@@ -91,7 +91,9 @@ def fetch_year(st: Station, year: int) -> list[dict]:
         url = f"{TW}/waterlevel_yearly_graph?station_type=tele_waterlevel&station_id={st.id}&year={year}"
         data = get_json(url)["data"]["graph_data"]
         series = data[0]["graph_data"] if data else []
-        path.write_text(json.dumps(series), encoding="utf-8")
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(series), encoding="utf-8")
+        tmp.replace(path)
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -242,9 +244,7 @@ def main() -> None:
 
     calib = [(e, s) for e, s in zip(eps, sats, strict=True) if year_of(e) in CALIB]
     hold = [(e, s) for e, s in zip(eps, sats, strict=True) if year_of(e) == HOLDOUT]
-    calib_stations = Counter(
-        ev.station.code for e, _ in calib for ev in e
-    )
+    calib_stations = Counter(ev.station.code for e, _ in calib for ev in e)
     g1 = len(calib) >= 30 and sum(c >= 3 for c in calib_stations.values()) >= 5
     g2 = len(hold) >= 10
     g3_n = sum(s["hls_usable"] > 0 for _, s in calib)

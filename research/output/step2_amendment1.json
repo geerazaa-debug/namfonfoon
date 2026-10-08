@@ -1,0 +1,351 @@
+[
+ {
+  "label": "bangkok",
+  "stations_in_bbox": 22,
+  "excluded_sanity": {
+   "BKC004": [
+    2020,
+    2023,
+    2024,
+    2025
+   ],
+   "BKC002": [
+    2023,
+    2024,
+    2025
+   ],
+   "BKC003": [
+    2024
+   ],
+   "GLF001": [
+    2019,
+    2020,
+    2021
+   ]
+  },
+  "excluded_tidal": [
+   "BKK006",
+   "C.12",
+   "CPY014",
+   "CPY015"
+  ],
+  "used": [
+   "BKK017",
+   "BKK020",
+   "BKK009",
+   "BKK007",
+   "BKK003",
+   "BKK002",
+   "BKK015",
+   "BKK021",
+   "BKK001",
+   "BKK018",
+   "VLGE20",
+   "BKK019",
+   "BKK005",
+   "AIT001"
+  ],
+  "overflow": {
+   "station_events_all": 108,
+   "station_events_rain_unknown": 3,
+   "station_events_pluvial": 35,
+   "episodes_by_year": {
+    "2020": 2,
+    "2021": 5,
+    "2022": 6,
+    "2023": 2,
+    "2024": 1,
+    "2025": 1
+   },
+   "episodes_by_month": {
+    "4": 1,
+    "5": 2,
+    "7": 1,
+    "8": 4,
+    "9": 4,
+    "10": 3,
+    "11": 2
+   },
+   "calib_station_events": {
+    "BKK021": 8,
+    "BKK017": 7,
+    "BKK009": 5,
+    "BKK003": 4,
+    "BKK002": 3,
+    "BKK020": 2,
+    "BKK018": 1,
+    "BKK007": 1,
+    "VLGE20": 1
+   },
+   "calib_episodes_multi_station": 5,
+   "G1_episodes": 15,
+   "G1_stations_ge3": 5,
+   "G2_episodes": 1,
+   "sensitivity_nearest_only": {
+    "calib": 14,
+    "holdout": 1
+   },
+   "rain_stations_within_10km": {
+    "BKK017": 4,
+    "BKK020": 4,
+    "BKK009": 4,
+    "BKK007": 2,
+    "BKK003": 3,
+    "BKK002": 6,
+    "BKK015": 1,
+    "BKK021": 2,
+    "BKK001": 5,
+    "BKK018": 1,
+    "VLGE20": 4,
+    "BKK019": 3,
+    "BKK005": 1,
+    "AIT001": 12
+   },
+   "G1_pass": false,
+   "G2_pass": false
+  },
+  "near_bank": {
+   "station_events_all": 255,
+   "station_events_rain_unknown": 12,
+   "station_events_pluvial": 66,
+   "episodes_by_year": {
+    "2020": 3,
+    "2021": 7,
+    "2022": 8,
+    "2023": 4,
+    "2024": 8,
+    "2025": 2
+   },
+   "episodes_by_month": {
+    "2": 1,
+    "4": 2,
+    "5": 3,
+    "7": 5,
+    "8": 6,
+    "9": 4,
+    "10": 7,
+    "11": 4
+   },
+   "calib_station_events": {
+    "BKK021": 14,
+    "BKK017": 8,
+    "BKK009": 6,
+    "BKK002": 5,
+    "AIT001": 5,
+    "BKK003": 4,
+    "BKK020": 4,
+    "BKK007": 4,
+    "BKK018": 1,
+    "VLGE20": 1
+   },
+   "calib_episodes_multi_station": 9,
+   "G1_episodes": 22,
+   "G1_stations_ge3": 8,
+   "G2_episodes": 8,
+   "sensitivity_nearest_only": {
+    "calib": 20,
+    "holdout": 7
+   },
+   "rain_stations_within_10km": {
+    "BKK017": 4,
+    "BKK020": 4,
+    "BKK009": 4,
+    "BKK007": 2,
+    "BKK003": 3,
+    "BKK002": 6,
+    "BKK015": 1,
+    "BKK021": 2,
+    "BKK001": 5,
+    "BKK018": 1,
+    "VLGE20": 4,
+    "BKK019": 3,
+    "BKK005": 1,
+    "AIT001": 12
+   },
+   "G1_pass": false,
+   "G2_pass": false
+  }
+ },
+ {
+  "label": "expanded_pathum_samutprakan",
+  "stations_in_bbox": 27,
+  "excluded_sanity": {
+   "BKC004": [
+    2020,
+    2023,
+    2024,
+    2025
+   ],
+   "HDA005": [
+    2022,
+    2025
+   ],
+   "BKC002": [
+    2023,
+    2024,
+    2025
+   ],
+   "BKC003": [
+    2024
+   ],
+   "GLF001": [
+    2019,
+    2020,
+    2021
+   ]
+  },
+  "excluded_tidal": [
+   "BKK006",
+   "C.12",
+   "CPY014",
+   "CPY015",
+   "CPY016"
+  ],
+  "used": [
+   "BKK017",
+   "BKK020",
+   "BKK009",
+   "BKK007",
+   "BKK003",
+   "BKK013",
+   "CAN001",
+   "BKK002",
+   "BKK016",
+   "BKK015",
+   "BKK021",
+   "BKK001",
+   "BKK018",
+   "VLGE20",
+   "BKK019",
+   "BKK005",
+   "AIT001"
+  ],
+  "overflow": {
+   "station_events_all": 111,
+   "station_events_rain_unknown": 3,
+   "station_events_pluvial": 35,
+   "episodes_by_year": {
+    "2020": 2,
+    "2021": 5,
+    "2022": 6,
+    "2023": 2,
+    "2024": 1,
+    "2025": 1
+   },
+   "episodes_by_month": {
+    "4": 1,
+    "5": 2,
+    "7": 1,
+    "8": 4,
+    "9": 4,
+    "10": 3,
+    "11": 2
+   },
+   "calib_station_events": {
+    "BKK021": 8,
+    "BKK017": 7,
+    "BKK009": 5,
+    "BKK003": 4,
+    "BKK002": 3,
+    "BKK020": 2,
+    "BKK018": 1,
+    "BKK007": 1,
+    "VLGE20": 1
+   },
+   "calib_episodes_multi_station": 5,
+   "G1_episodes": 15,
+   "G1_stations_ge3": 5,
+   "G2_episodes": 1,
+   "sensitivity_nearest_only": {
+    "calib": 14,
+    "holdout": 1
+   },
+   "rain_stations_within_10km": {
+    "BKK017": 4,
+    "BKK020": 4,
+    "BKK009": 4,
+    "BKK007": 2,
+    "BKK003": 3,
+    "BKK013": 2,
+    "CAN001": 3,
+    "BKK002": 6,
+    "BKK016": 2,
+    "BKK015": 1,
+    "BKK021": 2,
+    "BKK001": 5,
+    "BKK018": 1,
+    "VLGE20": 4,
+    "BKK019": 3,
+    "BKK005": 1,
+    "AIT001": 12
+   },
+   "G1_pass": false,
+   "G2_pass": false
+  },
+  "near_bank": {
+   "station_events_all": 263,
+   "station_events_rain_unknown": 12,
+   "station_events_pluvial": 67,
+   "episodes_by_year": {
+    "2020": 3,
+    "2021": 7,
+    "2022": 8,
+    "2023": 4,
+    "2024": 8,
+    "2025": 2
+   },
+   "episodes_by_month": {
+    "2": 1,
+    "4": 2,
+    "5": 3,
+    "7": 5,
+    "8": 6,
+    "9": 4,
+    "10": 7,
+    "11": 4
+   },
+   "calib_station_events": {
+    "BKK021": 14,
+    "BKK017": 8,
+    "BKK009": 6,
+    "BKK002": 5,
+    "AIT001": 5,
+    "BKK003": 4,
+    "BKK020": 4,
+    "BKK007": 4,
+    "BKK016": 1,
+    "BKK018": 1,
+    "VLGE20": 1
+   },
+   "calib_episodes_multi_station": 9,
+   "G1_episodes": 22,
+   "G1_stations_ge3": 8,
+   "G2_episodes": 8,
+   "sensitivity_nearest_only": {
+    "calib": 20,
+    "holdout": 7
+   },
+   "rain_stations_within_10km": {
+    "BKK017": 4,
+    "BKK020": 4,
+    "BKK009": 4,
+    "BKK007": 2,
+    "BKK003": 3,
+    "BKK013": 2,
+    "CAN001": 3,
+    "BKK002": 6,
+    "BKK016": 2,
+    "BKK015": 1,
+    "BKK021": 2,
+    "BKK001": 5,
+    "BKK018": 1,
+    "VLGE20": 4,
+    "BKK019": 3,
+    "BKK005": 1,
+    "AIT001": 12
+   },
+   "G1_pass": false,
+   "G2_pass": false
+  }
+ }
+]
