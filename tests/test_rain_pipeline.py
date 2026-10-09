@@ -96,7 +96,7 @@ def make_pipeline(subs, rain_mm, send):
 
     pipe = AlertPipeline(
         fetch=fetch,
-        subscribers=subs,
+        subscribers=lambda: subs,
         send=send,
         analyzer=RuleBasedAnalyzer(cfg=risk_thresholds(), now=lambda: NOW),
         accumulator=RainAccumulator(ACC_CFG),

@@ -1,7 +1,7 @@
-"""FastAPI app: LINE webhook + B2B risk/routing API.
+"""FastAPI app: LINE webhook + B2B risk/routing API + background rain poller.
 
-State (zones, subscriber locations) is in-memory for the scaffold; swap for a
-persistent store before deploying more than one worker.
+Subscribers, rain history and alert cooldowns persist in SQLite (`storage.db_path`, or env
+FLOODWATCH_DB). One process only: the poller must not run in several workers at once.
 """
 
 from __future__ import annotations
@@ -13,14 +13,19 @@ import os
 import secrets
 from collections.abc import AsyncIterator
 from contextlib import AsyncExitStack, asynccontextmanager
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from src.alerts.dispatcher import AlertPipeline, default_fetch
+from src.alerts.dispatcher import AlertPipeline, CooldownTracker, default_fetch
 from src.alerts.line_notifier import LineNotifier, verify_signature
-from src.config import settings
+from src.config import risk_thresholds, settings
+from src.data.db import Database
+from src.data.thaiwater_rain import RainAccumulator
 from src.data.validator import GeoPoint
+from src.engine.districts import district_index
 from src.engine.geofence import FloodZone, ZoneHit, zones_near_point, zones_on_route
 from src.engine.risk_analyzer import AlertInput, Assessment, RuleBasedAnalyzer
 
@@ -28,8 +33,23 @@ log = logging.getLogger(__name__)
 
 analyzer = RuleBasedAnalyzer()
 ZONES: dict[str, FloodZone] = {}
-SUBSCRIBERS: dict[str, GeoPoint] = {}  # LINE userId -> last shared location
 pipeline: AlertPipeline | None = None
+_db: Database | None = None
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def get_db() -> Database:
+    """Open (and auto-create/migrate) the SQLite store on first use."""
+    global _db
+    if _db is None:
+        path = os.environ.get("FLOODWATCH_DB") or str(ROOT / settings()["storage"]["db_path"])
+        _db = Database(path)
+    return _db
+
+
+def district_name(p: GeoPoint) -> str | None:
+    d = district_index().locate(p)
+    return d.th if d else None
 
 
 @asynccontextmanager
@@ -45,7 +65,15 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
             send = (await stack.enter_async_context(LineNotifier())).push
         else:
             log.warning("LINE_CHANNEL_ACCESS_TOKEN not set: rain poller runs in dry mode")
-        pipeline = AlertPipeline(fetch=default_fetch(), subscribers=SUBSCRIBERS, send=send, analyzer=analyzer)
+        db = get_db()
+        pipeline = AlertPipeline(
+            fetch=default_fetch(),
+            subscribers=db.users,
+            send=send,
+            analyzer=analyzer,
+            accumulator=RainAccumulator(db=db, district_of=district_name),
+            cooldown=CooldownTracker(timedelta(minutes=risk_thresholds()["alerts"]["cooldown_min"]), db=db),
+        )
         stop = asyncio.Event()
         task = asyncio.create_task(pipeline.run_forever(settings()["rain_pipeline"]["poll_interval_min"] * 60, stop))
         try:
@@ -106,10 +134,9 @@ async def line_webhook(request: Request, x_line_signature: str = Header(default=
         user_id = ev.get("source", {}).get("userId")
         msg = ev.get("message", {})
         if ev.get("type") == "message" and msg.get("type") == "location" and user_id:
-            SUBSCRIBERS[user_id] = GeoPoint(lat=msg["latitude"], lon=msg["longitude"])
+            loc = GeoPoint(lat=msg["latitude"], lon=msg["longitude"])
+            get_db().upsert_user(user_id, loc, district_name(loc), datetime.now(UTC))
             log.info("registered location for subscriber")  # never log userId/coords
         elif ev.get("type") == "unfollow" and user_id:
-            SUBSCRIBERS.pop(user_id, None)
-            if pipeline is not None:
-                pipeline.cooldown.forget_user(user_id)
+            get_db().delete_user(user_id)  # also deletes the user's cooldown rows
     return {"status": "ok"}

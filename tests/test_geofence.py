@@ -89,7 +89,6 @@ def test_api_route_check_and_webhook(monkeypatch):
     monkeypatch.setenv("B2B_API_KEYS", "k1")
     monkeypatch.setenv("LINE_CHANNEL_SECRET", "sec")
     monkeypatch.setattr(server, "ZONES", {"z1": ZONE})
-    monkeypatch.setattr(server, "SUBSCRIBERS", {})
     client = TestClient(server.app)
 
     route = {"route": [{"lat": 13.75, "lon": 100.40}, {"lat": 13.75, "lon": 100.60}]}
@@ -111,4 +110,4 @@ def test_api_route_check_and_webhook(monkeypatch):
     assert client.post("/webhook/line", content=body, headers={"X-Line-Signature": "bad"}).status_code == 401
     r = client.post("/webhook/line", content=body, headers={"X-Line-Signature": _sign(body, "sec")})
     assert r.status_code == 200
-    assert server.SUBSCRIBERS["U1"] == GeoPoint(lat=13.7, lon=100.5)
+    assert server.get_db().users() == {"U1": GeoPoint(lat=13.7, lon=100.5)}

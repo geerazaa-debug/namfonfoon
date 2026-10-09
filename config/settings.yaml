@@ -44,3 +44,6 @@ rain_pipeline:
   fallback_radius_km: 10      # else the nearest station within this distance
   min_hours_for_6h: 5         # of the 6 hourly slots; fewer -> rain_6h unknown (1h rule only)
   history_hours: 24
+
+storage:
+  db_path: data/floodwatch.db   # relative to project root; override with env FLOODWATCH_DB

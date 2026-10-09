@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 from src.alerts.payload_builder import build_rain_alert
 from src.config import risk_thresholds, settings
+from src.data.db import Database
 from src.data.thaiwater_rain import RainAccumulator, ThaiWaterRainClient
 from src.data.validator import BoundingBox, GeoPoint
 from src.engine.risk_analyzer import AlertInput, Assessment, RiskLevel, RuleBasedAnalyzer
@@ -27,22 +28,24 @@ Sender = Callable[[str, list[dict[str, Any]]], Awaitable[object]]
 
 
 class CooldownTracker:
-    def __init__(self, cooldown: timedelta) -> None:
+    """Last alert per (user, area), persisted in SQLite `alert_cooldowns` so restarts don't re-alert."""
+
+    def __init__(self, cooldown: timedelta, db: Database | None = None) -> None:
         self.cooldown = cooldown
-        self._last: dict[tuple[str, str], tuple[datetime, RiskLevel]] = {}
+        self.db = db or Database()
 
     def should_send(self, key: tuple[str, str], level: RiskLevel, now: datetime) -> bool:
-        prev = self._last.get(key)
+        prev = self.db.get_cooldown(*key)
         if prev is None:
             return True
         sent_at, sent_level = prev
-        return now - sent_at >= self.cooldown or level.rank > sent_level.rank
+        return now - sent_at >= self.cooldown or level.rank > RiskLevel(sent_level).rank
 
     def record(self, key: tuple[str, str], level: RiskLevel, now: datetime) -> None:
-        self._last[key] = (now, level)
+        self.db.set_cooldown(key[0], key[1], level.value, now)
 
     def forget_user(self, user_id: str) -> None:
-        self._last = {k: v for k, v in self._last.items() if k[0] != user_id}
+        self.db.delete_cooldowns(user_id)
 
 
 class RunReport(BaseModel):
@@ -65,7 +68,7 @@ class AlertPipeline:
         self,
         *,
         fetch: Callable[[BoundingBox], Awaitable[list]],
-        subscribers: Mapping[str, GeoPoint],
+        subscribers: Callable[[], Mapping[str, GeoPoint]],
         send: Sender | None,
         analyzer: RuleBasedAnalyzer | None = None,
         accumulator: RainAccumulator | None = None,
@@ -73,7 +76,7 @@ class AlertPipeline:
         bbox: BoundingBox | None = None,
     ) -> None:
         self.fetch = fetch
-        self.subscribers = subscribers
+        self.subscribers = subscribers  # called each poll, so new/removed users take effect
         self.send = send  # None = dry run: assess and count, never push
         self.analyzer = analyzer or RuleBasedAnalyzer()
         self.acc = accumulator or RainAccumulator()
@@ -86,7 +89,8 @@ class AlertPipeline:
         snaps = await self.fetch(self.bbox)
         self.acc.add(snaps)
         counts = dict(notify=0, sent=0, suppressed_cooldown=0, failed=0, no_data=0)
-        for user_id, loc in list(self.subscribers.items()):
+        subs = self.subscribers()
+        for user_id, loc in subs.items():
             a = self.analyzer.assess(AlertInput(location=loc, rain=self.acc.near(loc)))
             if a.stale:
                 counts["no_data"] += 1
@@ -107,7 +111,7 @@ class AlertPipeline:
                 continue
             self.cooldown.record(key, a.level, now)
             counts["sent"] += 1
-        report = RunReport(stations=len(snaps), subscribers=len(self.subscribers), **counts)
+        report = RunReport(stations=len(snaps), subscribers=len(subs), **counts)
         log.info("rain poll: %s", report.model_dump())
         return report
 

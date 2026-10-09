@@ -18,7 +18,7 @@ Rule-based heavy-rain advisory for Bangkok districts (rain thresholds + BMA DDS 
 5. **Concise code.** No speculative abstractions, no dead code, comments only for non-obvious *why*.
 6. **Config over constants.** Endpoints, coordinates, thresholds, weights live in `config/*.yaml`, loaded via `src/config.py`.
 7. **Async I/O** through `httpx.AsyncClient` + `src/retry.request_with_retry` (handles 429/5xx + Retry-After).
-8. **Privacy.** User locations and LINE userIds are personal data: never log them; store only what alerting needs.
+8. **Privacy.** User locations and LINE userIds are personal data: never log them; store only what alerting needs (SQLite `users` keeps coordinates rounded to ~1 km). Never commit `data/*.db`.
 
 ## Honesty constraints
 - **The system is a rule-based rain advisory, not a flood predictor.** Step 4 (`docs/step4_backtest_result.md`): the multi-factor model did not beat rain-only (PR-AUC 0.148 vs 0.171), and rain-only itself is weak. Never call it "AI", "prediction" or "forecast" in user-facing text. Alert cards must say it is an advisory based on rainfall.

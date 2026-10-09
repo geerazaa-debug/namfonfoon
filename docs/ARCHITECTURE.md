@@ -51,6 +51,7 @@ rain observations (gauge / radar, per user location)        config/risk_threshol
 | `src/alerts/line_notifier.py` | **Live:** push with retry key, webhook signature check |
 | `src/alerts/dispatcher.py` | **Live:** `AlertPipeline` poller + `CooldownTracker` |
 | `src/data/thaiwater_rain.py` | **Live:** ThaiWater client + rolling 6 h `RainAccumulator` |
+| `src/data/db.py` | **Live:** SQLite store (rain_logs, alert_cooldowns, users) |
 | `src/api/server.py` | **Live:** `/v1/risk/assess`, zones/route endpoints, LINE webhook |
 | `src/engine/geofence.py` | Live utility (zones/routes). No zone producer yet |
 | `src/data/nasa_client.py` | Paused: satellite factor NO-GO (no usable monsoon history) |
@@ -58,32 +59,44 @@ rain observations (gauge / radar, per user location)        config/risk_threshol
 | `src/data/local_sensors.py` | Placeholder schema |
 | `research/` | Offline studies + `build_hotspots.py` (regenerates the config tables) |
 
-## Live pipeline (v0.2.1)
+## Live pipeline (v0.2.2)
 ```
 every 15 min (POLLER_ENABLED=1, FastAPI lifespan)
-ThaiWater public/rain_24h ──► RainAccumulator (per-station hourly rain_1h, 24 h memory)
+ThaiWater public/rain_24h ──► RainAccumulator ──► SQLite rain_logs (per-station hourly rain_1h, 24 h kept)
                                  │ rain_6h = sum of last 6 hourly slots (needs ≥ 5 present)
                                  ▼
-subscribers (LINE location) ──► near(): stations ≤ 5 km, else nearest ≤ 10 km
+SQLite users (LINE location, ~1 km rounded) ──► near(): stations ≤ 5 km, else nearest ≤ 10 km
                                  ▼
                          RuleBasedAnalyzer ──► notify?
                                  ▼
-               CooldownTracker: key (user, district), 180 min; level increase bypasses
+               CooldownTracker → SQLite alert_cooldowns: key (user, district), 180 min; level increase bypasses
                                  ▼
                  build_rain_alert ──► LineNotifier.push (retry key); failure → retried next poll
 ```
 - With no `LINE_CHANNEL_ACCESS_TOKEN`, the pipeline runs **dry**: it assesses and logs counts, and never pushes.
 - Live check 2026-10-08: 34 ThaiWater stations in the area of interest; 49/50 district points have a station within 5 km or a fallback within 10 km.
 
+### Persistence (`src/data/db.py`)
+SQLite in WAL mode at `data/floodwatch.db` (override with env `FLOODWATCH_DB`). The schema is auto-created and migrated via `PRAGMA user_version`.
+
+| Table | Key | Purpose |
+|---|---|---|
+| `rain_logs` | (station_id, observed_at UTC) | Hourly `rain_1h` + station lat/lon + district. Re-polls overwrite. Pruned to 24 h |
+| `alert_cooldowns` | (line_user_id, district_name) | Last level/time sent. Per user, so a new subscriber in an alerted district still gets their first alert |
+| `users` | line_user_id | District + coordinates **rounded to 0.01° (~1.1 km)**. Deleted (with cooldowns) on unfollow |
+
+A restart keeps the 6 h totals, the cooldowns and the subscribers.
+
 ### Known limitations
-- **Cold start:** history is in memory, so after a restart the 6 h rule is inactive for ~4–5 hours (1 h rule only).
-- Subscribers and cooldown state are in memory: they are lost on restart, and only a single worker is supported.
+- **Single process only.** SQLite plus an in-process poller: running several API workers would run several pollers and send duplicate alerts.
+- After an outage longer than ~1 h, the 6 h total for those hours is missing. The rule needs ≥ 5 of 6 slots and falls back to the 1 h rule otherwise.
 - ThaiWater licence is not stated: fine for a free public advisory, but needs permission before any paid or B2B use.
 - LINE push quota: the free plan has a small monthly message limit. Check it before onboarding users.
+- `users` holds personal data (LINE userId + ~1 km location). The DB file must not be committed (gitignored) or shared.
 
 ## Not built yet
-1. Persistent store for subscribers, cooldown and rain history (fixes the cold start).
-2. Radar QPE input (access unverified, see `docs/bma_data_request_draft.md`).
+1. Radar QPE input (access unverified, see `docs/bma_data_request_draft.md`).
+2. Multi-instance deployment (would need a shared DB and leader election for the poller).
 
 ## Path back to prediction (paused)
 Preconditions before a new pre-registered test:

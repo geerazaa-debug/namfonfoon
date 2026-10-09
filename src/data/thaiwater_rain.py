@@ -7,13 +7,15 @@ station's hourly values across polls. Licence of ThaiWater data is not stated - 
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any, Self
 
 import httpx
 from pydantic import BaseModel, Field
 
 from src.config import settings
+from src.data.db import Database
 from src.data.validator import BoundingBox, GeoPoint
 from src.engine.geofence import haversine_km
 from src.engine.risk_analyzer import RainObservation
@@ -61,43 +63,55 @@ class ThaiWaterRainClient:
 
 
 class RainAccumulator:
-    """Per-station hourly history kept across polls (in memory)."""
+    """Per-station hourly rain history in SQLite (`rain_logs`), so 6 h totals survive restarts."""
 
-    def __init__(self, cfg: dict[str, Any] | None = None) -> None:
+    def __init__(
+        self,
+        cfg: dict[str, Any] | None = None,
+        db: Database | None = None,
+        district_of: Callable[[GeoPoint], str | None] = lambda _: None,
+    ) -> None:
         cfg = cfg or settings()["rain_pipeline"]
         self.radius_km = float(cfg["station_radius_km"])
         self.fallback_km = float(cfg["fallback_radius_km"])
         self.min_hours = int(cfg["min_hours_for_6h"])
         self.keep = timedelta(hours=cfg["history_hours"])
-        self._hours: dict[str, dict[datetime, float]] = {}
-        self._where: dict[str, GeoPoint] = {}
+        self.db = db or Database()
+        self.district_of = district_of
 
     def add(self, snaps: list[RainSnapshot]) -> None:
-        for s in snaps:
-            self._where[s.station_id] = s.location
-            self._hours.setdefault(s.station_id, {})[s.observed_at] = (
-                s.rain_1h_mm
-            )  # re-polls of the same hour overwrite
-        for sid, hours in self._hours.items():
-            if hours:
-                cutoff = max(hours) - self.keep
-                self._hours[sid] = {t: v for t, v in hours.items() if t > cutoff}
+        if not snaps:
+            return
+        self.db.upsert_rain(  # re-polls of the same station-hour overwrite, never double count
+            [
+                (
+                    s.station_id,
+                    s.observed_at,
+                    s.rain_1h_mm,
+                    s.location.lat,
+                    s.location.lon,
+                    self.district_of(s.location),
+                )
+                for s in snaps
+            ]
+        )
+        self.db.prune_rain(max(s.observed_at for s in snaps) - self.keep)
 
     def observation(self, station_id: str) -> RainObservation | None:
-        hours = self._hours.get(station_id)
-        if not hours:
+        latest = self.db.latest_rain_time(station_id)
+        if latest is None:
             return None
-        latest = max(hours)
-        window = [hours[t] for t in (latest - timedelta(hours=i) for i in range(6)) if t in hours]
+        hours = self.db.rain_hours(station_id, since=latest - timedelta(hours=5))
         return RainObservation(
             source_id=f"thaiwater:{station_id}",
             observed_at=latest,
             rain_1h_mm=hours[latest],
-            rain_6h_mm=sum(window) if len(window) >= self.min_hours else None,
+            rain_6h_mm=sum(hours.values()) if len(hours) >= self.min_hours else None,
         )
 
     def near(self, p: GeoPoint) -> list[RainObservation]:
-        dist = sorted((haversine_km(p, loc), sid) for sid, loc in self._where.items())
+        where = self.db.station_locations(since=datetime(1970, 1, 1, tzinfo=UTC))
+        dist = sorted((haversine_km(p, loc), sid) for sid, loc in where.items())
         chosen = [sid for d, sid in dist if d <= self.radius_km]
         if not chosen and dist and dist[0][0] <= self.fallback_km:
             chosen = [dist[0][1]]

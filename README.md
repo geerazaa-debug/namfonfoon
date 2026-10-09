@@ -46,7 +46,9 @@ The 6 h thresholds are the 10th, 25th and 50th percentiles of rainfall in BMA-re
 ## Running the alert poller
 Set `POLLER_ENABLED=1` (and `LINE_CHANNEL_ACCESS_TOKEN` to actually send). Every 15 min it pulls ThaiWater rain, builds rolling 6 h totals, assesses each LINE subscriber's shared location, and pushes an advisory at **high** or above. The same user + district is not re-alerted within 3 h unless the level rises.
 
+Subscribers, rain history and cooldowns persist in SQLite (`data/floodwatch.db`, WAL mode, auto-created), so a restart does not lose the 6 h totals or re-send alerts. Run **one** process only.
+
 ## Not yet built
-- Persistent storage (subscribers, cooldown, rain history). After a restart the 6 h rule needs ~5 h to warm up
 - Radar QPE input. A data request draft to BMA is in `docs/bma_data_request_draft.md`
+- Multi-instance deployment
 - Predictive model: paused. See "Path back to prediction" in `docs/ARCHITECTURE.md`
