@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ถนนกรุงเทพฯ ท่วมตรงไหนบ่อย</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b1626; --panel: #13233a; --ink: #eef4fb; --muted: #8fa3bd;
+    --low: #1d3352; --mid: #2f7fe0; --high: #9fdcff; --pulse: #ffffff; --hot: #ff6b5e;
+  }
+  html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; }
+  #stage {
+    position: relative; width: 1080px; height: 1920px; flex: none; background: var(--bg); color: var(--ink);
+    font-family: "Kanit", "Leelawadee UI", Tahoma, sans-serif; transform-origin: center center;
+  }
+  .abs { position: absolute; left: 0; right: 0; text-align: center; }
+  #title { top: 110px; font-size: 64px; font-weight: 600; line-height: 1.25; padding: 0 60px; }
+  #subtitle { top: 230px; font-size: 38px; font-weight: 300; color: var(--muted); padding: 0 60px; }
+  #map { position: absolute; left: 40px; top: 400px; width: 1000px; height: 860px; }
+  #map path { stroke: var(--bg); stroke-width: 1.6; stroke-linejoin: round; }
+  #labels text { font-family: inherit; font-size: 24px; font-weight: 600; fill: #fff; text-anchor: middle;
+    paint-order: stroke; stroke: rgba(11,22,38,.9); stroke-width: 6px; }
+  #panel { position: absolute; left: 60px; right: 60px; top: 1300px; height: 420px; }
+  #date { font-size: 92px; font-weight: 600; text-align: center; letter-spacing: 1px; }
+  .stats { display: flex; gap: 28px; margin-top: 18px; }
+  .stat { flex: 1; background: var(--panel); border-radius: 22px; padding: 18px 24px; text-align: center; }
+  .stat b { display: block; font-size: 64px; font-weight: 600; line-height: 1.1; }
+  .stat span { font-size: 28px; color: var(--muted); }
+  #progress { position: relative; margin-top: 34px; height: 10px; background: var(--panel); border-radius: 5px; }
+  #progress i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--mid); border-radius: 5px; }
+  #ticks { position: relative; height: 40px; font-size: 26px; color: var(--muted); }
+  #ticks span { position: absolute; top: 8px; transform: translateX(-50%); }
+  #bars { position: absolute; left: 60px; right: 60px; top: 1290px; }
+  .bar { display: flex; align-items: center; height: 40px; margin-bottom: 1px; font-size: 28px; }
+  .bar .n { width: 46px; color: var(--muted); }
+  .bar .name { width: 190px; }
+  .bar .track { flex: 1; height: 26px; position: relative; }
+  .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--mid); border-radius: 6px; }
+  .bar .v { width: 92px; text-align: right; font-weight: 600; }
+  #legend { position: absolute; left: 0; right: 0; top: 1258px; display: flex; justify-content: center; align-items: center;
+    gap: 14px; font-size: 26px; color: var(--muted); }
+  #legend .grad { width: 260px; height: 16px; border-radius: 8px;
+    background: linear-gradient(90deg, var(--low), var(--mid), var(--high)); }
+  #legend .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--hot); margin-left: 26px; }
+  #closing { top: 1290px; font-size: 50px; line-height: 1.45; padding: 0 70px; }
+  #intro { top: 1330px; font-size: 40px; line-height: 1.6; color: var(--muted); padding: 0 90px; }
+  #intro b { color: var(--ink); font-weight: 400; }
+  #closing .em { color: var(--high); font-weight: 600; }
+  #footer { bottom: 50px; font-size: 25px; line-height: 1.5; color: var(--muted); padding: 0 50px; }
+  #footer b { color: var(--ink); font-weight: 400; }
+  .hide { opacity: 0; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="title" class="abs"></div>
+  <div id="subtitle" class="abs"></div>
+  <svg id="map" viewBox="0 0 1000 860"><g id="shapes"></g><g id="labels"></g></svg>
+  <div id="legend"><span>น้อย</span><div class="grad"></div><span>บ่อย</span><span class="dot"></span><span>ท่วมช่วงนี้</span></div>
+  <div id="intro" class="abs">ทุกครั้งที่ กทม. บันทึกว่า<b>ถนนในเขตมีน้ำท่วม</b><br>เขตนั้นจะกระพริบ <b style="color:var(--hot)">สีแดง</b><br>และ<b>สีฟ้าเข้มขึ้น</b>ตามจำนวนวันที่ท่วมสะสม</div>
+  <div id="panel">
+    <div id="date"></div>
+    <div class="stats">
+      <div class="stat"><b id="s1">0</b><span>วันที่มีถนนท่วม</span></div>
+      <div class="stat"><b id="s2">0</b><span>เขต-วัน สะสม</span></div>
+    </div>
+    <div id="progress"><i></i></div>
+    <div id="ticks"></div>
+  </div>
+  <div id="bars"></div>
+  <div id="closing" class="abs"></div>
+  <div id="footer" class="abs">
+    <b>ข้อมูลย้อนหลัง ไม่ใช่การพยากรณ์</b> · นับเฉพาะถนนที่สำนักการระบายน้ำ กทม. บันทึกไว้<br>
+    ที่มา: ข้อมูลจุดน้ำท่วมถนน (DDS) กรุงเทพมหานคร data.bangkok.go.th (CC BY)<br>
+    แผนที่: geoBoundaries (CC BY 3.0 IGO)
+  </div>
+</div>
+<script>
+const DATA = /*DATA*/null;
+const DUR = 46;
+const T_PLAY0 = 4, T_PLAY1 = 28, T_WORST1 = 34, T_TOP1 = 41;
+const MONTHS = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const PULSE_DAYS = 30;
+const $ = (id) => document.getElementById(id);
+const start = new Date(DATA.start + "T00:00:00");
+const dayDate = (k) => new Date(start.getTime() + k * 86400000);
+const thaiMonth = (k) => { const d = dayDate(k); return `${MONTHS[d.getMonth()]} ${d.getFullYear() + 543}`; };
+const thaiDay = (k) => { const d = dayDate(k); return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear() + 543}`; };
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ease = (x) => { x = clamp(x); return x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; };
+const maxDays = Math.max(...DATA.districts.map((d) => d.days.length));
+const ranked = DATA.districts.map((d, i) => ({ i, n: d.days.length })).sort((a, b) => b.n - a.n).slice(0, 10);
+const worstSet = new Set(DATA.worstDistricts);
+
+function hex(c) { return [1, 3, 5].map((o) => parseInt(c.slice(o, o + 2), 16)); }
+function mix(a, b, t) { const x = hex(a), y = hex(b); return "rgb(" + x.map((v, j) => Math.round(v + (y[j] - v) * t)).join(",") + ")"; }
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = { low: css("--low"), mid: css("--mid"), high: css("--high"), pulse: css("--pulse"), hot: css("--hot"), bg: css("--bg") };
+function scale(n) {
+  if (n <= 0) return C.low;
+  const t = Math.sqrt(n / maxDays);
+  return t < .5 ? mix(C.low, C.mid, t * 2) : mix(C.mid, C.high, (t - .5) * 2);
+}
+function rgbMix(rgb, target, t) {
+  const a = rgb.match(/\d+/g).map(Number), b = hex(target);
+  return "rgb(" + a.map((v, j) => Math.round(v + (b[j] - v) * t)).join(",") + ")";
+}
+
+// Build the map and static pieces once.
+const shapes = DATA.districts.map((d) => {
+  const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  p.setAttribute("d", d.path);
+  $("shapes").appendChild(p);
+  return p;
+});
+const labels = ranked.map((r, j) => {
+  const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  const d = DATA.districts[r.i];
+  t.setAttribute("x", d.cx); t.setAttribute("y", d.cy + 8);
+  t.textContent = `${j + 1}`;
+  $("labels").appendChild(t);
+  return t;
+});
+const firstYear = start.getFullYear() + 1;
+for (let y = firstYear; ; y++) {
+  const k = (new Date(`${y}-01-01T00:00:00`) - start) / 86400000;
+  if (k > DATA.totalDays) break;
+  const s = document.createElement("span");
+  s.style.left = (k / DATA.totalDays * 100) + "%";
+  s.textContent = y + 543;
+  $("ticks").appendChild(s);
+}
+$("bars").innerHTML = ranked.map((r, j) => `<div class="bar"><span class="n">${j + 1}</span><span class="name">${DATA.districts[r.i].th}</span>` +
+  `<span class="track"><span class="fill"></span></span><span class="v">${r.n}</span></div>`).join("");
+const fills = [...document.querySelectorAll(".bar .fill")];
+const bars = [...document.querySelectorAll(".bar")];
+
+function countUpTo(days, k) { let c = 0; for (const x of days) { if (x <= k) c++; else break; } return c; }
+
+function renderAt(t) {
+  t = clamp(t, 0, DUR);
+  const play = clamp((t - T_PLAY0) / (T_PLAY1 - T_PLAY0));
+  const simDay = t < T_PLAY0 ? -1 : play * DATA.totalDays;
+  const inWorst = t >= T_PLAY1 && t < T_WORST1, inTop = t >= T_WORST1 && t < T_TOP1, inEnd = t >= T_TOP1;
+
+  // header
+  let title = "ถนนกรุงเทพฯ ท่วมตรงไหนบ่อย?", sub = `ข้อมูลจริงจาก กทม. ${thaiMonth(0)} – ${thaiMonth(DATA.totalDays)}`;
+  if (inWorst) { title = "วันที่หนักที่สุดในข้อมูล"; sub = `ถนนท่วมพร้อมกัน ${Math.round(ease((t - T_PLAY1) / 1.5) * DATA.worstDistricts.length)} เขตในวันเดียว`; }
+  if (inTop) { title = "10 เขตที่ถนนท่วมบ่อยที่สุด"; sub = "จำนวนวันที่มีบันทึกถนนท่วมในเขต"; }
+  if (inEnd) { title = "ย่านคุณอยู่ตรงไหน?"; sub = ""; }
+  $("title").textContent = title; $("subtitle").textContent = sub;
+  $("title").style.opacity = t < .6 ? ease(t / .6) : 1;
+
+  // map colours
+  const mapIn = ease(t / 1.2);
+  DATA.districts.forEach((d, i) => {
+    const n = simDay < 0 ? 0 : countUpTo(d.days, simDay);
+    let col = scale(n);
+    if (t >= T_PLAY0 && t < T_PLAY1) {
+      let pulse = 0;
+      for (const k of d.days) { const age = simDay - k; if (age >= 0 && age < PULSE_DAYS) pulse = Math.max(pulse, 1 - age / PULSE_DAYS); }
+      if (pulse > 0) col = rgbMix(col, C.hot, .9 * pulse);
+    }
+    if (inWorst) {
+      const on = ease((t - T_PLAY1) / 1.2);
+      col = worstSet.has(i) ? rgbMix(scale(d.days.length), C.hot, on) : rgbMix(scale(d.days.length), C.bg, .6 * on);
+    }
+    if (inTop) {
+      const isTop = ranked.some((r) => r.i === i);
+      col = isTop ? scale(d.days.length) : rgbMix(scale(d.days.length), C.bg, .65 * ease((t - T_WORST1) / 1));
+    }
+    if (inEnd) col = rgbMix(scale(d.days.length), C.bg, .75 * ease((t - T_TOP1) / 1));
+    shapes[i].style.fill = col;
+  });
+  $("map").style.opacity = mapIn;
+  $("intro").style.opacity = t < T_PLAY0 - .8 ? ease((t - .8) / .8) : 1 - ease((t - T_PLAY0 + .8) / .6);
+  labels.forEach((l, j) => { l.style.opacity = inTop ? ease((t - T_WORST1 - j * .12) / .5) : 0; });
+
+  // timeline panel
+  const showPanel = t >= T_PLAY0 - .8 && t < T_PLAY1 + 6;
+  $("panel").style.opacity = t < T_PLAY0 ? ease((t - T_PLAY0 + .8) / .8) : (t < T_WORST1 - .6 ? 1 : 1 - ease((t - T_WORST1 + .6) / .6));
+  $("panel").style.visibility = showPanel ? "visible" : "hidden";
+  const k = inWorst ? DATA.worstDay : Math.max(0, simDay);
+  $("date").textContent = inWorst ? thaiDay(DATA.worstDay) : thaiMonth(Math.min(k, DATA.totalDays));
+  if (!inWorst) {
+    let fd = 0, dd = 0;
+    for (const [day, ds] of DATA.events) { if (day <= simDay) { fd++; dd += ds.length; } else break; }
+    $("s1").textContent = fd.toLocaleString("th-TH"); $("s2").textContent = dd.toLocaleString("th-TH");
+  }
+  document.querySelector(".stats").style.visibility = inWorst ? "hidden" : "visible";
+  $("progress").firstElementChild.style.width = (inWorst ? DATA.worstDay / DATA.totalDays : play) * 100 + "%";
+  $("legend").style.opacity = (t >= T_PLAY0 - .8 && t < T_PLAY1) ? clamp((t - T_PLAY0 + .8) / .8) : 0;
+
+  // top-10 bars
+  $("bars").style.visibility = inTop ? "visible" : "hidden";
+  bars.forEach((b, j) => { b.style.opacity = inTop ? ease((t - T_WORST1 - .3 - j * .12) / .5) : 0; });
+  fills.forEach((f, j) => { f.style.width = (inTop ? ease((t - T_WORST1 - .3 - j * .12) / 1.2) : 0) * ranked[j].n / ranked[0].n * 100 + "%";
+    f.style.background = scale(ranked[j].n); });
+
+  // closing
+  const c = $("closing");
+  if (inEnd) {
+    c.innerHTML = `${DATA.districts.length - DATA.zeroDistricts.length} จาก ${DATA.districts.length} เขต มีบันทึกถนนท่วม<br>` +
+      `<span class="em">ไม่มีบันทึก ≠ ไม่เคยท่วม</span><br>` +
+      `<span style="font-size:36px;color:var(--muted)">ข้อมูลนี้นับเฉพาะถนนที่ กทม. ตรวจ<br>หน้าฝนติดตามประกาศจาก กทม. และกรมอุตุนิยมวิทยา</span>`;
+    c.style.opacity = ease((t - T_TOP1 - .3) / .8);
+  } else c.style.opacity = 0;
+}
+window.renderAt = renderAt;
+window.DURATION = DUR;
+
+function fit() {
+  const s = Math.min(innerWidth / 1080, innerHeight / 1920);
+  $("stage").style.transform = `scale(${s})`;
+}
+if (!new URLSearchParams(location.search).has("render")) {
+  addEventListener("resize", fit); fit();
+  let t0 = null;
+  const loop = (now) => { if (t0 === null) t0 = now; renderAt(((now - t0) / 1000) % (DUR + 2)); requestAnimationFrame(loop); };
+  document.fonts.ready.then(() => requestAnimationFrame(loop));
+} else renderAt(0);
+</script>
+</body>
+</html>

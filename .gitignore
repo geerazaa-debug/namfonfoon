@@ -8,3 +8,5 @@ data/cache/
 data/*.db
 data/*.db-wal
 data/*.db-shm
+research/flood_animation/out/
+research/flood_animation/flood_map.html
