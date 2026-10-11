@@ -54,8 +54,8 @@ def svg_path(geom, tf) -> str:
     return "".join(out)
 
 
-def main() -> None:
-    sys.stdout.reconfigure(encoding="utf-8")
+def load_data() -> dict:
+    """Everything the animation shows, computed from the DDS records and district boundaries."""
     geo = json.loads((ROOT / "config" / "bangkok_districts.geojson").read_text(encoding="utf-8"))
     feats = [(f["properties"]["th"], f["properties"]["en"], shape(f["geometry"])) for f in geo["features"]]
     tf = project([g for _, _, g in feats])
@@ -92,6 +92,13 @@ def main() -> None:
         "districtDays": sum(len(v) for v in by_day.values()),
         "zeroDistricts": [d["th"] for d in districts if not d["days"]],
     }
+    return data
+
+
+def main() -> None:
+    sys.stdout.reconfigure(encoding="utf-8")
+    data = load_data()
+    districts = data["districts"]
     template = (HERE / "template.html").read_text(encoding="utf-8")
     payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     i18n = (HERE / "i18n.json").read_text(encoding="utf-8")
@@ -104,7 +111,7 @@ def main() -> None:
         (HERE / page_name(lang)).write_text(html, encoding="utf-8")
     top = sorted(districts, key=lambda d: -len(d["days"]))[:10]
     print(f"flood days {data['floodDays']}, district-days {data['districtDays']}")
-    print(f"worst day index {worst_day} ({len(worst)} districts)")
+    print(f"worst day index {data['worstDay']} ({len(data['worstDistricts'])} districts)")
     print("top10:", [(d["th"], len(d["days"])) for d in top])
     print("zero:", data["zeroDistricts"])
 

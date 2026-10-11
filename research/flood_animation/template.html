@@ -19,8 +19,10 @@
     font-family: "Kanit", "Leelawadee UI", Tahoma, sans-serif; transform-origin: center center;
   }
   .abs { position: absolute; left: 0; right: 0; text-align: center; }
-  #title { top: 110px; font-size: 64px; font-weight: 600; line-height: 1.25; padding: 0 60px; }
-  #subtitle { top: 230px; font-size: 38px; font-weight: 300; color: var(--muted); padding: 0 60px; }
+  #head { position: absolute; left: 0; right: 0; top: 100px; display: flex; flex-direction: column; gap: 22px;
+    text-align: center; padding: 0 60px; }
+  #title { font-size: calc(64px * var(--ts, 1)); font-weight: 600; line-height: 1.25; }
+  #subtitle { font-size: calc(38px * var(--ts, 1)); font-weight: 300; color: var(--muted); }
   #map { position: absolute; left: 40px; top: 400px; width: 1000px; height: 860px; }
   #map path { stroke: var(--bg); stroke-width: 1.6; stroke-linejoin: round; }
   #labels text { font-family: inherit; font-size: 24px; font-weight: 600; fill: #fff; text-anchor: middle;
@@ -47,19 +49,18 @@
   #legend .grad { width: 260px; height: 16px; border-radius: 8px;
     background: linear-gradient(90deg, var(--low), var(--mid), var(--high)); }
   #legend .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--hot); margin-left: 26px; }
-  #closing { top: 1290px; font-size: 50px; line-height: 1.45; padding: 0 70px; }
-  #intro { top: 1330px; font-size: 40px; line-height: 1.6; color: var(--muted); padding: 0 90px; }
+  #closing { font-size: calc(50px * var(--ts, 1)); line-height: 1.45; padding: 0 70px; }
+  #intro { top: 1330px; font-size: calc(40px * var(--ts, 1)); line-height: 1.6; color: var(--muted); padding: 0 90px; }
   #intro b { color: var(--ink); font-weight: 400; }
   #closing .em { color: var(--high); font-weight: 600; }
-  #footer { bottom: 50px; font-size: 25px; line-height: 1.5; color: var(--muted); padding: 0 50px; }
+  #footer { bottom: 50px; font-size: calc(25px * var(--ts, 1)); line-height: 1.5; color: var(--muted); padding: 0 50px; }
   #footer b { color: var(--ink); font-weight: 400; }
   .hide { opacity: 0; }
 </style>
 </head>
 <body>
 <div id="stage">
-  <div id="title" class="abs"></div>
-  <div id="subtitle" class="abs"></div>
+  <div id="head"><div id="title"></div><div id="subtitle"></div></div>
   <svg id="map" viewBox="0 0 1000 860"><g id="shapes"></g><g id="labels"></g></svg>
   <div id="legend"><span id="lgLow"></span><div class="grad"></div><span id="lgHigh"></span><span class="dot"></span><span id="lgNow"></span></div>
   <div id="intro" class="abs"></div>
@@ -83,8 +84,8 @@ const STR = {
   th: {
     months: ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."], yearOffset: 543, locale: "th-TH",
     title: "ถนนกรุงเทพฯ ท่วมตรงไหนบ่อย?", sub: (a, b) => `ข้อมูลจริงจาก กทม. ${a} – ${b}`,
-    intro: `ทุกครั้งที่ กทม. บันทึกว่า<b>ถนนในเขตมีน้ำท่วม</b><br>เขตนั้นจะกระพริบ <b style="color:var(--hot)">สีแดง</b><br>และ<b>สีฟ้าเข้มขึ้น</b>ตามจำนวนวันที่ท่วมสะสม`,
-    low: "น้อย", high: "บ่อย", now: "ท่วมช่วงนี้", s1: "วันที่มีถนนท่วม", s2: "เขต-วัน สะสม",
+    intro: `ทุกครั้งที่ กทม. บันทึกว่า<b>ถนนในเขตมีน้ำท่วม</b><br>เขตนั้นจะกระพริบ <b style="color:var(--hot)">สีแดง</b><br>และ<b>สีฟ้าสว่างขึ้น</b>ตามจำนวนวันที่ท่วมสะสม`,
+    low: "น้อย", high: "บ่อย", now: "ถนนท่วมวันนั้น", s1: "วันที่มีถนนท่วม", s2: "เขต-วัน สะสม",
     worstTitle: "วันที่หนักที่สุดในข้อมูล", worstSub: (n) => `ถนนท่วมพร้อมกัน ${n} เขตในวันเดียว`,
     topTitle: "10 เขตที่ถนนท่วมบ่อยที่สุด", topSub: "จำนวนวันที่มีบันทึกถนนท่วมในเขต", endTitle: "ย่านคุณอยู่ตรงไหน?",
     closing: (n, m) => `${n} จาก ${m} เขต มีบันทึกถนนท่วม<br><span class="em">ไม่มีบันทึก ≠ ไม่เคยท่วม</span><br>` +
@@ -97,8 +98,8 @@ const STR = {
     months: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], yearOffset: 0, locale: "en-US",
     title: "Where do Bangkok roads flood?", sub: (a, b) => `Official city records, ${a} – ${b}`,
     intro: `When the city logs <b>a flooded road</b>,<br>that district flashes <b style="color:var(--hot)">red</b><br>and turns <b>brighter blue</b> over time`,
-    low: "fewer", high: "more", now: "flooding now", s1: "days with flooded roads", s2: "district-days",
-    worstTitle: "The worst day on record", worstSub: (n) => `Roads flooded in ${n} districts at once`,
+    low: "fewer", high: "more", now: "flooded that day", s1: "days with flooded roads", s2: "district-days",
+    worstTitle: "The worst day in these records", worstSub: (n) => `Roads flooded in ${n} districts at once`,
     topTitle: "Top 10 districts by flood days", topSub: "Days with a recorded road flood in the district", endTitle: "Where do you live?",
     closing: (n, m) => `${n} of ${m} districts logged road floods<br><span class="em">No record ≠ never flooded</span><br>` +
       `<span style="font-size:34px;color:var(--muted)">Only roads checked by the city count.<br>In the rainy season, follow BMA and<br>Thai Meteorological Department alerts.</span>`,
@@ -134,6 +135,9 @@ const thaiMonth = (k) => { const d = dayDate(k); return fmtMonth(MONTHS[d.getMon
 const thaiDay = (k) => { const d = dayDate(k); return fmtDay(d.getDate(), MONTHS[d.getMonth()], d.getFullYear() + STR.yearOffset); };
 document.title = STR.title;
 $("intro").innerHTML = STR.intro; $("footer").innerHTML = STR.footer;
+if (STR.scale) document.documentElement.style.setProperty("--ts", STR.scale);
+// Closing text sits just above the footer, whatever the footer's height in this language.
+$("closing").style.bottom = ($("footer").offsetHeight + 50 + 40) + "px";
 $("lgLow").textContent = STR.low; $("lgHigh").textContent = STR.high; $("lgNow").textContent = STR.now;
 $("s1l").textContent = STR.s1; $("s2l").textContent = STR.s2;
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));

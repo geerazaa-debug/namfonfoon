@@ -19,8 +19,10 @@
     font-family: "Kanit", "Leelawadee UI", Tahoma, sans-serif; transform-origin: center center;
   }
   .abs { position: absolute; left: 0; right: 0; text-align: center; }
-  #title { top: 110px; font-size: 64px; font-weight: 600; line-height: 1.25; padding: 0 60px; }
-  #subtitle { top: 230px; font-size: 38px; font-weight: 300; color: var(--muted); padding: 0 60px; }
+  #head { position: absolute; left: 0; right: 0; top: 100px; display: flex; flex-direction: column; gap: 22px;
+    text-align: center; padding: 0 60px; }
+  #title { font-size: calc(64px * var(--ts, 1)); font-weight: 600; line-height: 1.25; }
+  #subtitle { font-size: calc(38px * var(--ts, 1)); font-weight: 300; color: var(--muted); }
   #map { position: absolute; left: 40px; top: 400px; width: 1000px; height: 860px; }
   #map path { stroke: var(--bg); stroke-width: 1.6; stroke-linejoin: round; }
   #labels text { font-family: inherit; font-size: 24px; font-weight: 600; fill: #fff; text-anchor: middle;
@@ -47,19 +49,18 @@
   #legend .grad { width: 260px; height: 16px; border-radius: 8px;
     background: linear-gradient(90deg, var(--low), var(--mid), var(--high)); }
   #legend .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--hot); margin-left: 26px; }
-  #closing { top: 1290px; font-size: 50px; line-height: 1.45; padding: 0 70px; }
-  #intro { top: 1330px; font-size: 40px; line-height: 1.6; color: var(--muted); padding: 0 90px; }
+  #closing { font-size: calc(50px * var(--ts, 1)); line-height: 1.45; padding: 0 70px; }
+  #intro { top: 1330px; font-size: calc(40px * var(--ts, 1)); line-height: 1.6; color: var(--muted); padding: 0 90px; }
   #intro b { color: var(--ink); font-weight: 400; }
   #closing .em { color: var(--high); font-weight: 600; }
-  #footer { bottom: 50px; font-size: 25px; line-height: 1.5; color: var(--muted); padding: 0 50px; }
+  #footer { bottom: 50px; font-size: calc(25px * var(--ts, 1)); line-height: 1.5; color: var(--muted); padding: 0 50px; }
   #footer b { color: var(--ink); font-weight: 400; }
   .hide { opacity: 0; }
 </style>
 </head>
 <body>
 <div id="stage">
-  <div id="title" class="abs"></div>
-  <div id="subtitle" class="abs"></div>
+  <div id="head"><div id="title"></div><div id="subtitle"></div></div>
   <svg id="map" viewBox="0 0 1000 860"><g id="shapes"></g><g id="labels"></g></svg>
   <div id="legend"><span id="lgLow"></span><div class="grad"></div><span id="lgHigh"></span><span class="dot"></span><span id="lgNow"></span></div>
   <div id="intro" class="abs"></div>
@@ -83,8 +84,8 @@ const STR = {
   th: {
     months: ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."], yearOffset: 543, locale: "th-TH",
     title: "ถนนกรุงเทพฯ ท่วมตรงไหนบ่อย?", sub: (a, b) => `ข้อมูลจริงจาก กทม. ${a} – ${b}`,
-    intro: `ทุกครั้งที่ กทม. บันทึกว่า<b>ถนนในเขตมีน้ำท่วม</b><br>เขตนั้นจะกระพริบ <b style="color:var(--hot)">สีแดง</b><br>และ<b>สีฟ้าเข้มขึ้น</b>ตามจำนวนวันที่ท่วมสะสม`,
-    low: "น้อย", high: "บ่อย", now: "ท่วมช่วงนี้", s1: "วันที่มีถนนท่วม", s2: "เขต-วัน สะสม",
+    intro: `ทุกครั้งที่ กทม. บันทึกว่า<b>ถนนในเขตมีน้ำท่วม</b><br>เขตนั้นจะกระพริบ <b style="color:var(--hot)">สีแดง</b><br>และ<b>สีฟ้าสว่างขึ้น</b>ตามจำนวนวันที่ท่วมสะสม`,
+    low: "น้อย", high: "บ่อย", now: "ถนนท่วมวันนั้น", s1: "วันที่มีถนนท่วม", s2: "เขต-วัน สะสม",
     worstTitle: "วันที่หนักที่สุดในข้อมูล", worstSub: (n) => `ถนนท่วมพร้อมกัน ${n} เขตในวันเดียว`,
     topTitle: "10 เขตที่ถนนท่วมบ่อยที่สุด", topSub: "จำนวนวันที่มีบันทึกถนนท่วมในเขต", endTitle: "ย่านคุณอยู่ตรงไหน?",
     closing: (n, m) => `${n} จาก ${m} เขต มีบันทึกถนนท่วม<br><span class="em">ไม่มีบันทึก ≠ ไม่เคยท่วม</span><br>` +
@@ -97,8 +98,8 @@ const STR = {
     months: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], yearOffset: 0, locale: "en-US",
     title: "Where do Bangkok roads flood?", sub: (a, b) => `Official city records, ${a} – ${b}`,
     intro: `When the city logs <b>a flooded road</b>,<br>that district flashes <b style="color:var(--hot)">red</b><br>and turns <b>brighter blue</b> over time`,
-    low: "fewer", high: "more", now: "flooding now", s1: "days with flooded roads", s2: "district-days",
-    worstTitle: "The worst day on record", worstSub: (n) => `Roads flooded in ${n} districts at once`,
+    low: "fewer", high: "more", now: "flooded that day", s1: "days with flooded roads", s2: "district-days",
+    worstTitle: "The worst day in these records", worstSub: (n) => `Roads flooded in ${n} districts at once`,
     topTitle: "Top 10 districts by flood days", topSub: "Days with a recorded road flood in the district", endTitle: "Where do you live?",
     closing: (n, m) => `${n} of ${m} districts logged road floods<br><span class="em">No record ≠ never flooded</span><br>` +
       `<span style="font-size:34px;color:var(--muted)">Only roads checked by the city count.<br>In the rainy season, follow BMA and<br>Thai Meteorological Department alerts.</span>`,
@@ -114,9 +115,9 @@ const STR = {
   "title": "曼谷哪些道路会积水？",
   "sub": "市政府官方记录，{a} – {b}",
   "intro": "当官方记录到<b>道路积水</b>时，<br>该区会闪烁<b style=\"color:var(--hot)\">红光</b>，<br>并随时间推移变成<b>更亮的蓝色</b>",
-  "low": "较少", "high": "较多", "now": "当前积水",
+  "low": "较少", "high": "较多", "now": "当日积水",
   "s1": "道路积水天数", "s2": "累计 区·日",
-  "worstTitle": "有记录以来最严重的一天",
+  "worstTitle": "本数据中最严重的一天",
   "worstSub": "共有 {n} 个区同时出现道路积水",
   "topTitle": "积水天数前 10 位的区",
   "topSub": "该区记录到道路积水的天数",
@@ -124,7 +125,7 @@ const STR = {
   "closing1": "{m} 个区中有 {n} 个记录过道路积水",
   "closing2": "无记录 ≠ 从未积水",
   "closing3": "仅计入市政巡查过的道路。<br>雨季期间，请关注 BMA 和<br>泰国气象局的预警信息。",
-  "footer1": "历史记录，非天气预报",
+  "footer1": "历史记录，并非预测",
   "footer2": "仅包含市政记录的道路",
   "footer3": "来源：曼谷市政府 (BMA) 道路积水记录，data.bangkok.go.th (CC BY)",
   "footer4": "地图：geoBoundaries (CC BY 3.0 IGO)"
@@ -135,14 +136,14 @@ const STR = {
   "title": "バンコクの冠水道路はどこ？",
   "sub": "市公式記録、{a} – {b}",
   "intro": "道路の<b>冠水が記録</b>されると、<br>その区が<b style=\"color:var(--hot)\">赤く点滅</b>し、<br>時間の経過とともに<b>明るい青</b>に変化します",
-  "low": "少ない", "high": "多い", "now": "現在冠水",
+  "low": "少ない", "high": "多い", "now": "当日冠水",
   "s1": "冠水発生日数", "s2": "延べ 区・日",
-  "worstTitle": "過去最悪の記録日",
+  "worstTitle": "この記録期間で最悪の日",
   "worstSub": "同時に {n} 区で道路が冠水",
   "topTitle": "冠水日数ワースト10区",
   "topSub": "区内で道路冠水が記録された日数",
   "endTitle": "あなたのお住まいは？",
-  "closing1": "{m} 区中 {n} 区で冠水を記録",
+  "closing1": "{m} 区中 {n} 区で道路冠水を記録",
   "closing2": "記録なし ≠ 冠水ゼロ",
   "closing3": "市が巡回・確認した道路のみ集計。<br>雨季は BMA と<br>タイ気象局の情報をご確認ください。",
   "footer1": "過去の記録であり予報ではありません",
@@ -151,14 +152,14 @@ const STR = {
   "footer4": "地図：geoBoundaries (CC BY 3.0 IGO)"
  },
  "my": {
-  "locale": "my-MM", "monthFmt": "{m} {y}", "dayFmt": "{y} {m} {d}",
+  "locale": "my-MM", "scale": 0.85, "monthFmt": "{m} {y}", "dayFmt": "{y} {m} {d}",
   "months": ["ဇန်","ဖေ","မတ်","ဧ","မေ","ဇွန်","ဇူ","ဩ","စက်","အောက်","နို","ဒီ"],
   "title": "ဘန်ကောက်မှာ ဘယ်လမ်းတွေ ရေကြီးသလဲ။",
   "sub": "မြို့တော်စည်ပင် တရားဝင်မှတ်တမ်း၊ {a} – {b}",
   "intro": "မြို့တော်က <b>လမ်းရေကြီးမှု</b> မှတ်တမ်းတင်တိုင်း<br>ထိုမြို့နယ်သည် <b style=\"color:var(--hot)\">အနီရောင်</b> လက်သွားပြီး<br>အချိန်ကြာလာသည်နှင့်အမျှ <b>အပြာရောင် ပိုတောက်ပ</b> လာပါမည်",
-  "low": "နည်း", "high": "များ", "now": "လက်ရှိ ရေကြီးနေ",
+  "low": "နည်း", "high": "များ", "now": "ထိုနေ့ ရေကြီး",
   "s1": "လမ်းရေကြီးသည့်ရက်များ", "s2": "မြို့နယ်-ရက်ပေါင်း",
-  "worstTitle": "စံချိန်တင် အဆိုးရွားဆုံးနေ့",
+  "worstTitle": "ဤမှတ်တမ်းများအတွင်း အဆိုးရွားဆုံးနေ့",
   "worstSub": "မြို့နယ် {n} ခုတွင် တစ်ပြိုင်နက် လမ်းရေကြီးခဲ့",
   "topTitle": "ရေကြီးသည့်ရက် အများဆုံး မြို့နယ် ၁၀ ခု",
   "topSub": "မြို့နယ်အတွင်း လမ်းရေကြီးမှု မှတ်တမ်းတင်ထားသည့် ရက်များ",
@@ -166,7 +167,7 @@ const STR = {
   "closing1": "မြို့နယ် {m} ခုအနက် {n} ခုတွင် လမ်းရေကြီးမှု မှတ်တမ်းရှိ",
   "closing2": "မှတ်တမ်းမရှိခြင်း ≠ လုံးဝရေမကြီးခြင်း",
   "closing3": "မြို့တော်စည်ပင် စစ်ဆေးထားသော လမ်းများသာ အကျုံးဝင်သည်။<br>မိုးတွင်းကာလတွင် BMA နှင့်<br>ထိုင်းမိုးလေဝသဌာန၏ သတိပေးချက်များကို စောင့်ကြည့်ပါ။",
-  "footer1": "အတိတ်မှတ်တမ်းသာဖြစ်ပြီး မိုးလေဝသခန့်မှန်းချက် မဟုတ်ပါ",
+  "footer1": "အတိတ်မှတ်တမ်းသာဖြစ်ပြီး ခန့်မှန်းချက် မဟုတ်ပါ",
   "footer2": "မြို့တော်စည်ပင် မှတ်တမ်းတင်ထားသော လမ်းများသာ",
   "footer3": "အရင်းအမြစ်: ဘန်ကောက်မြို့တော် (BMA) လမ်းရေကြီးမှုမှတ်တမ်းများ၊ data.bangkok.go.th (CC BY)",
   "footer4": "မြေပုံ: geoBoundaries (CC BY 3.0 IGO)"
@@ -200,6 +201,9 @@ const thaiMonth = (k) => { const d = dayDate(k); return fmtMonth(MONTHS[d.getMon
 const thaiDay = (k) => { const d = dayDate(k); return fmtDay(d.getDate(), MONTHS[d.getMonth()], d.getFullYear() + STR.yearOffset); };
 document.title = STR.title;
 $("intro").innerHTML = STR.intro; $("footer").innerHTML = STR.footer;
+if (STR.scale) document.documentElement.style.setProperty("--ts", STR.scale);
+// Closing text sits just above the footer, whatever the footer's height in this language.
+$("closing").style.bottom = ($("footer").offsetHeight + 50 + 40) + "px";
 $("lgLow").textContent = STR.low; $("lgHigh").textContent = STR.high; $("lgNow").textContent = STR.now;
 $("s1l").textContent = STR.s1; $("s2l").textContent = STR.s2;
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
