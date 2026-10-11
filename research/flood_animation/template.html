@@ -106,17 +106,32 @@ const STR = {
       `Source: Bangkok (BMA) road-flood records, data.bangkok.go.th (CC BY)<br>Map: geoBoundaries (CC BY 3.0 IGO)`,
     name: (d) => d.en,
   },
-}[LANG];
+}[LANG] || fromJson((/*I18N*/null)[LANG]);
+function fromJson(j) {
+  const f = (s, o) => s.replace(/\{(\w)\}/g, (_, k) => o[k]);
+  return {
+    ...j, yearOffset: 0,
+    fmtMonth: (m, y) => f(j.monthFmt, { m, y }), fmtDay: (d, m, y) => f(j.dayFmt, { d, m, y }),
+    sub: (a, b) => f(j.sub, { a, b }), worstSub: (n) => f(j.worstSub, { n }),
+    closing: (n, m) => `${f(j.closing1, { n, m })}<br><span class="em">${j.closing2}</span><br>` +
+      `<span style="font-size:34px;color:var(--muted)">${j.closing3}</span>`,
+    footer: `<b>${j.footer1}</b> · ${j.footer2}<br>${j.footer3}<br>${j.footer4}`,
+    name: (d) => d.en,
+  };
+}
 document.documentElement.lang = LANG;
-const DUR = 46;
-const T_PLAY0 = 4, T_PLAY1 = 28, T_WORST1 = 34, T_TOP1 = 41;
+// Scene boundaries are sized to the voice-over (narration.json uses the same times).
+const DUR = 50;
+const T_PLAY0 = 5.5, T_PLAY1 = 26, T_WORST1 = 33.8, T_TOP1 = 41.8;
 const MONTHS = STR.months;
 const PULSE_DAYS = 30;
 const $ = (id) => document.getElementById(id);
 const start = new Date(DATA.start + "T00:00:00");
 const dayDate = (k) => new Date(start.getTime() + k * 86400000);
-const thaiMonth = (k) => { const d = dayDate(k); return `${MONTHS[d.getMonth()]} ${d.getFullYear() + STR.yearOffset}`; };
-const thaiDay = (k) => { const d = dayDate(k); return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear() + STR.yearOffset}`; };
+const fmtMonth = STR.fmtMonth || ((m, y) => `${m} ${y}`);
+const fmtDay = STR.fmtDay || ((d, m, y) => `${d} ${m} ${y}`);
+const thaiMonth = (k) => { const d = dayDate(k); return fmtMonth(MONTHS[d.getMonth()], d.getFullYear() + STR.yearOffset); };
+const thaiDay = (k) => { const d = dayDate(k); return fmtDay(d.getDate(), MONTHS[d.getMonth()], d.getFullYear() + STR.yearOffset); };
 document.title = STR.title;
 $("intro").innerHTML = STR.intro; $("footer").innerHTML = STR.footer;
 $("lgLow").textContent = STR.low; $("lgHigh").textContent = STR.high; $("lgNow").textContent = STR.now;

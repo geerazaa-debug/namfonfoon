@@ -106,17 +106,98 @@ const STR = {
       `Source: Bangkok (BMA) road-flood records, data.bangkok.go.th (CC BY)<br>Map: geoBoundaries (CC BY 3.0 IGO)`,
     name: (d) => d.en,
   },
-}[LANG];
+}[LANG] || fromJson(({
+ "_note": "Extra on-screen languages. Translated by Gemini (gemini-3.8-flash) from the English strings, 2026-10-12. zh/ja reviewed by Claude; my (Burmese) NOT reviewed by a native speaker yet.",
+ "zh": {
+  "locale": "zh-CN", "monthFmt": "{y}年{m}", "dayFmt": "{y}年{m}{d}日",
+  "months": ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],
+  "title": "曼谷哪些道路会积水？",
+  "sub": "市政府官方记录，{a} – {b}",
+  "intro": "当官方记录到<b>道路积水</b>时，<br>该区会闪烁<b style=\"color:var(--hot)\">红光</b>，<br>并随时间推移变成<b>更亮的蓝色</b>",
+  "low": "较少", "high": "较多", "now": "当前积水",
+  "s1": "道路积水天数", "s2": "累计 区·日",
+  "worstTitle": "有记录以来最严重的一天",
+  "worstSub": "共有 {n} 个区同时出现道路积水",
+  "topTitle": "积水天数前 10 位的区",
+  "topSub": "该区记录到道路积水的天数",
+  "endTitle": "你住在哪里？",
+  "closing1": "{m} 个区中有 {n} 个记录过道路积水",
+  "closing2": "无记录 ≠ 从未积水",
+  "closing3": "仅计入市政巡查过的道路。<br>雨季期间，请关注 BMA 和<br>泰国气象局的预警信息。",
+  "footer1": "历史记录，非天气预报",
+  "footer2": "仅包含市政记录的道路",
+  "footer3": "来源：曼谷市政府 (BMA) 道路积水记录，data.bangkok.go.th (CC BY)",
+  "footer4": "地图：geoBoundaries (CC BY 3.0 IGO)"
+ },
+ "ja": {
+  "locale": "ja-JP", "monthFmt": "{y}年{m}", "dayFmt": "{y}年{m}{d}日",
+  "months": ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],
+  "title": "バンコクの冠水道路はどこ？",
+  "sub": "市公式記録、{a} – {b}",
+  "intro": "道路の<b>冠水が記録</b>されると、<br>その区が<b style=\"color:var(--hot)\">赤く点滅</b>し、<br>時間の経過とともに<b>明るい青</b>に変化します",
+  "low": "少ない", "high": "多い", "now": "現在冠水",
+  "s1": "冠水発生日数", "s2": "延べ 区・日",
+  "worstTitle": "過去最悪の記録日",
+  "worstSub": "同時に {n} 区で道路が冠水",
+  "topTitle": "冠水日数ワースト10区",
+  "topSub": "区内で道路冠水が記録された日数",
+  "endTitle": "あなたのお住まいは？",
+  "closing1": "{m} 区中 {n} 区で冠水を記録",
+  "closing2": "記録なし ≠ 冠水ゼロ",
+  "closing3": "市が巡回・確認した道路のみ集計。<br>雨季は BMA と<br>タイ気象局の情報をご確認ください。",
+  "footer1": "過去の記録であり予報ではありません",
+  "footer2": "市が記録した道路のみ",
+  "footer3": "出典：バンコク都庁 (BMA) 道路冠水記録、data.bangkok.go.th (CC BY)",
+  "footer4": "地図：geoBoundaries (CC BY 3.0 IGO)"
+ },
+ "my": {
+  "locale": "my-MM", "monthFmt": "{m} {y}", "dayFmt": "{y} {m} {d}",
+  "months": ["ဇန်","ဖေ","မတ်","ဧ","မေ","ဇွန်","ဇူ","ဩ","စက်","အောက်","နို","ဒီ"],
+  "title": "ဘန်ကောက်မှာ ဘယ်လမ်းတွေ ရေကြီးသလဲ။",
+  "sub": "မြို့တော်စည်ပင် တရားဝင်မှတ်တမ်း၊ {a} – {b}",
+  "intro": "မြို့တော်က <b>လမ်းရေကြီးမှု</b> မှတ်တမ်းတင်တိုင်း<br>ထိုမြို့နယ်သည် <b style=\"color:var(--hot)\">အနီရောင်</b> လက်သွားပြီး<br>အချိန်ကြာလာသည်နှင့်အမျှ <b>အပြာရောင် ပိုတောက်ပ</b> လာပါမည်",
+  "low": "နည်း", "high": "များ", "now": "လက်ရှိ ရေကြီးနေ",
+  "s1": "လမ်းရေကြီးသည့်ရက်များ", "s2": "မြို့နယ်-ရက်ပေါင်း",
+  "worstTitle": "စံချိန်တင် အဆိုးရွားဆုံးနေ့",
+  "worstSub": "မြို့နယ် {n} ခုတွင် တစ်ပြိုင်နက် လမ်းရေကြီးခဲ့",
+  "topTitle": "ရေကြီးသည့်ရက် အများဆုံး မြို့နယ် ၁၀ ခု",
+  "topSub": "မြို့နယ်အတွင်း လမ်းရေကြီးမှု မှတ်တမ်းတင်ထားသည့် ရက်များ",
+  "endTitle": "သင် ဘယ်မှာနေထိုင်ပါသလဲ။",
+  "closing1": "မြို့နယ် {m} ခုအနက် {n} ခုတွင် လမ်းရေကြီးမှု မှတ်တမ်းရှိ",
+  "closing2": "မှတ်တမ်းမရှိခြင်း ≠ လုံးဝရေမကြီးခြင်း",
+  "closing3": "မြို့တော်စည်ပင် စစ်ဆေးထားသော လမ်းများသာ အကျုံးဝင်သည်။<br>မိုးတွင်းကာလတွင် BMA နှင့်<br>ထိုင်းမိုးလေဝသဌာန၏ သတိပေးချက်များကို စောင့်ကြည့်ပါ။",
+  "footer1": "အတိတ်မှတ်တမ်းသာဖြစ်ပြီး မိုးလေဝသခန့်မှန်းချက် မဟုတ်ပါ",
+  "footer2": "မြို့တော်စည်ပင် မှတ်တမ်းတင်ထားသော လမ်းများသာ",
+  "footer3": "အရင်းအမြစ်: ဘန်ကောက်မြို့တော် (BMA) လမ်းရေကြီးမှုမှတ်တမ်းများ၊ data.bangkok.go.th (CC BY)",
+  "footer4": "မြေပုံ: geoBoundaries (CC BY 3.0 IGO)"
+ }
+}
+)[LANG]);
+function fromJson(j) {
+  const f = (s, o) => s.replace(/\{(\w)\}/g, (_, k) => o[k]);
+  return {
+    ...j, yearOffset: 0,
+    fmtMonth: (m, y) => f(j.monthFmt, { m, y }), fmtDay: (d, m, y) => f(j.dayFmt, { d, m, y }),
+    sub: (a, b) => f(j.sub, { a, b }), worstSub: (n) => f(j.worstSub, { n }),
+    closing: (n, m) => `${f(j.closing1, { n, m })}<br><span class="em">${j.closing2}</span><br>` +
+      `<span style="font-size:34px;color:var(--muted)">${j.closing3}</span>`,
+    footer: `<b>${j.footer1}</b> · ${j.footer2}<br>${j.footer3}<br>${j.footer4}`,
+    name: (d) => d.en,
+  };
+}
 document.documentElement.lang = LANG;
-const DUR = 46;
-const T_PLAY0 = 4, T_PLAY1 = 28, T_WORST1 = 34, T_TOP1 = 41;
+// Scene boundaries are sized to the voice-over (narration.json uses the same times).
+const DUR = 50;
+const T_PLAY0 = 5.5, T_PLAY1 = 26, T_WORST1 = 33.8, T_TOP1 = 41.8;
 const MONTHS = STR.months;
 const PULSE_DAYS = 30;
 const $ = (id) => document.getElementById(id);
 const start = new Date(DATA.start + "T00:00:00");
 const dayDate = (k) => new Date(start.getTime() + k * 86400000);
-const thaiMonth = (k) => { const d = dayDate(k); return `${MONTHS[d.getMonth()]} ${d.getFullYear() + STR.yearOffset}`; };
-const thaiDay = (k) => { const d = dayDate(k); return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear() + STR.yearOffset}`; };
+const fmtMonth = STR.fmtMonth || ((m, y) => `${m} ${y}`);
+const fmtDay = STR.fmtDay || ((d, m, y) => `${d} ${m} ${y}`);
+const thaiMonth = (k) => { const d = dayDate(k); return fmtMonth(MONTHS[d.getMonth()], d.getFullYear() + STR.yearOffset); };
+const thaiDay = (k) => { const d = dayDate(k); return fmtDay(d.getDate(), MONTHS[d.getMonth()], d.getFullYear() + STR.yearOffset); };
 document.title = STR.title;
 $("intro").innerHTML = STR.intro; $("footer").innerHTML = STR.footer;
 $("lgLow").textContent = STR.low; $("lgHigh").textContent = STR.high; $("lgNow").textContent = STR.now;

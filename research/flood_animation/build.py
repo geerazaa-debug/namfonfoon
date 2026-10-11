@@ -24,7 +24,7 @@ ROOT = HERE.parent.parent
 START = date(2021, 10, 1)
 END = date(2025, 12, 31)
 BOX_W, BOX_H = 1000.0, 860.0  # map area inside the 1080x1920 stage
-LANGS = ("th", "en")
+LANGS = ("th", "en", "zh", "ja", "my")  # th/en strings live in template.html, the rest in i18n.json
 
 
 def page_name(lang: str) -> str:
@@ -94,8 +94,13 @@ def main() -> None:
     }
     template = (HERE / "template.html").read_text(encoding="utf-8")
     payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+    i18n = (HERE / "i18n.json").read_text(encoding="utf-8")
     for lang in LANGS:
-        html = template.replace("/*DATA*/null", payload).replace('/*LANG*/"th"', json.dumps(lang))
+        html = (
+            template.replace("/*DATA*/null", payload)
+            .replace('/*LANG*/"th"', json.dumps(lang))
+            .replace("/*I18N*/null", i18n)
+        )
         (HERE / page_name(lang)).write_text(html, encoding="utf-8")
     top = sorted(districts, key=lambda d: -len(d["days"]))[:10]
     print(f"flood days {data['floodDays']}, district-days {data['districtDays']}")
