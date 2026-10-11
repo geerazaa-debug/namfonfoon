@@ -1,8 +1,8 @@
 """Render flood_map.html to MP4 frame by frame (deterministic renderAt(t), headless Edge, bundled ffmpeg).
 
 Usage:
-  .venv/Scripts/python -m research.flood_animation.render_mp4            # full video
-  .venv/Scripts/python -m research.flood_animation.render_mp4 --stills 2 15 30 37 44
+  .venv/Scripts/python -m research.flood_animation.render_mp4 [--lang en]   # full video
+  .venv/Scripts/python -m research.flood_animation.render_mp4 --lang en --stills 2 15 30 37 44
 Writes research/flood_animation/out/ (gitignored).
 """
 
@@ -16,6 +16,8 @@ from pathlib import Path
 import imageio_ffmpeg
 from playwright.sync_api import sync_playwright
 
+from research.flood_animation.build import LANGS, page_name
+
 HERE = Path(__file__).resolve().parent
 OUT = HERE / "out"
 FPS = 30
@@ -24,9 +26,11 @@ FPS = 30
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--stills", type=float, nargs="*", help="only save PNGs at these times (seconds)")
+    ap.add_argument("--lang", choices=LANGS, default="th")
     args = ap.parse_args()
     OUT.mkdir(exist_ok=True)
-    url = (HERE / "flood_map.html").as_uri() + "?render=1"
+    suffix = "" if args.lang == "th" else f"_{args.lang}"
+    url = (HERE / page_name(args.lang)).as_uri() + "?render=1"
     with sync_playwright() as p:
         browser = p.chromium.launch(channel="msedge")
         page = browser.new_page(viewport={"width": 1080, "height": 1920})
@@ -35,11 +39,11 @@ def main() -> None:
         if args.stills:
             for t in args.stills:
                 page.evaluate(f"renderAt({t})")
-                page.screenshot(path=str(OUT / f"still_{t:05.1f}.png"))
+                page.screenshot(path=str(OUT / f"still{suffix}_{t:05.1f}.png"))
             browser.close()
             return
         duration = page.evaluate("window.DURATION")
-        target = OUT / "bangkok_flood_history.mp4"
+        target = OUT / f"bangkok_flood_history{suffix}.mp4"
         cmd = [
             imageio_ffmpeg.get_ffmpeg_exe(),
             "-y",

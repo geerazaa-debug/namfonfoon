@@ -1,7 +1,8 @@
 """Build the Bangkok road-flood history animation (BMA DDS records, CC BY) as a self-contained HTML page.
 
 Usage: .venv/Scripts/python -m research.flood_animation.build
-Writes research/flood_animation/flood_map.html (open in a browser, or render with render_mp4.py).
+Writes research/flood_animation/flood_map.html (Thai) and flood_map_en.html (English);
+open in a browser, or render with render_mp4.py.
 Historical records only: no forecast, no model output.
 """
 
@@ -23,6 +24,11 @@ ROOT = HERE.parent.parent
 START = date(2021, 10, 1)
 END = date(2025, 12, 31)
 BOX_W, BOX_H = 1000.0, 860.0  # map area inside the 1080x1920 stage
+LANGS = ("th", "en")
+
+
+def page_name(lang: str) -> str:
+    return "flood_map.html" if lang == "th" else f"flood_map_{lang}.html"
 
 
 def project(geoms: list) -> tuple:
@@ -86,12 +92,11 @@ def main() -> None:
         "districtDays": sum(len(v) for v in by_day.values()),
         "zeroDistricts": [d["th"] for d in districts if not d["days"]],
     }
-    html = (
-        (HERE / "template.html")
-        .read_text(encoding="utf-8")
-        .replace("/*DATA*/null", json.dumps(data, ensure_ascii=False, separators=(",", ":")))
-    )
-    (HERE / "flood_map.html").write_text(html, encoding="utf-8")
+    template = (HERE / "template.html").read_text(encoding="utf-8")
+    payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+    for lang in LANGS:
+        html = template.replace("/*DATA*/null", payload).replace('/*LANG*/"th"', json.dumps(lang))
+        (HERE / page_name(lang)).write_text(html, encoding="utf-8")
     top = sorted(districts, key=lambda d: -len(d["days"]))[:10]
     print(f"flood days {data['floodDays']}, district-days {data['districtDays']}")
     print(f"worst day index {worst_day} ({len(worst)} districts)")

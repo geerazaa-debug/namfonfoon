@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ถนนกรุงเทพฯ ท่วมตรงไหนบ่อย</title>
+<title>Bangkok Flood History</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
@@ -38,7 +38,7 @@
   #bars { position: absolute; left: 60px; right: 60px; top: 1290px; }
   .bar { display: flex; align-items: center; height: 40px; margin-bottom: 1px; font-size: 28px; }
   .bar .n { width: 46px; color: var(--muted); }
-  .bar .name { width: 190px; }
+  .bar .name { width: 250px; }
   .bar .track { flex: 1; height: 26px; position: relative; }
   .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--mid); border-radius: 6px; }
   .bar .v { width: 92px; text-align: right; font-weight: 600; }
@@ -61,36 +61,66 @@
   <div id="title" class="abs"></div>
   <div id="subtitle" class="abs"></div>
   <svg id="map" viewBox="0 0 1000 860"><g id="shapes"></g><g id="labels"></g></svg>
-  <div id="legend"><span>น้อย</span><div class="grad"></div><span>บ่อย</span><span class="dot"></span><span>ท่วมช่วงนี้</span></div>
-  <div id="intro" class="abs">ทุกครั้งที่ กทม. บันทึกว่า<b>ถนนในเขตมีน้ำท่วม</b><br>เขตนั้นจะกระพริบ <b style="color:var(--hot)">สีแดง</b><br>และ<b>สีฟ้าเข้มขึ้น</b>ตามจำนวนวันที่ท่วมสะสม</div>
+  <div id="legend"><span id="lgLow"></span><div class="grad"></div><span id="lgHigh"></span><span class="dot"></span><span id="lgNow"></span></div>
+  <div id="intro" class="abs"></div>
   <div id="panel">
     <div id="date"></div>
     <div class="stats">
-      <div class="stat"><b id="s1">0</b><span>วันที่มีถนนท่วม</span></div>
-      <div class="stat"><b id="s2">0</b><span>เขต-วัน สะสม</span></div>
+      <div class="stat"><b id="s1">0</b><span id="s1l"></span></div>
+      <div class="stat"><b id="s2">0</b><span id="s2l"></span></div>
     </div>
     <div id="progress"><i></i></div>
     <div id="ticks"></div>
   </div>
   <div id="bars"></div>
   <div id="closing" class="abs"></div>
-  <div id="footer" class="abs">
-    <b>ข้อมูลย้อนหลัง ไม่ใช่การพยากรณ์</b> · นับเฉพาะถนนที่สำนักการระบายน้ำ กทม. บันทึกไว้<br>
-    ที่มา: ข้อมูลจุดน้ำท่วมถนน (DDS) กรุงเทพมหานคร data.bangkok.go.th (CC BY)<br>
-    แผนที่: geoBoundaries (CC BY 3.0 IGO)
-  </div>
+  <div id="footer" class="abs"></div>
 </div>
 <script>
 const DATA = /*DATA*/null;
+const LANG = /*LANG*/"th";
+const STR = {
+  th: {
+    months: ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."], yearOffset: 543, locale: "th-TH",
+    title: "ถนนกรุงเทพฯ ท่วมตรงไหนบ่อย?", sub: (a, b) => `ข้อมูลจริงจาก กทม. ${a} – ${b}`,
+    intro: `ทุกครั้งที่ กทม. บันทึกว่า<b>ถนนในเขตมีน้ำท่วม</b><br>เขตนั้นจะกระพริบ <b style="color:var(--hot)">สีแดง</b><br>และ<b>สีฟ้าเข้มขึ้น</b>ตามจำนวนวันที่ท่วมสะสม`,
+    low: "น้อย", high: "บ่อย", now: "ท่วมช่วงนี้", s1: "วันที่มีถนนท่วม", s2: "เขต-วัน สะสม",
+    worstTitle: "วันที่หนักที่สุดในข้อมูล", worstSub: (n) => `ถนนท่วมพร้อมกัน ${n} เขตในวันเดียว`,
+    topTitle: "10 เขตที่ถนนท่วมบ่อยที่สุด", topSub: "จำนวนวันที่มีบันทึกถนนท่วมในเขต", endTitle: "ย่านคุณอยู่ตรงไหน?",
+    closing: (n, m) => `${n} จาก ${m} เขต มีบันทึกถนนท่วม<br><span class="em">ไม่มีบันทึก ≠ ไม่เคยท่วม</span><br>` +
+      `<span style="font-size:36px;color:var(--muted)">ข้อมูลนี้นับเฉพาะถนนที่ กทม. ตรวจ<br>หน้าฝนติดตามประกาศจาก กทม. และกรมอุตุนิยมวิทยา</span>`,
+    footer: `<b>ข้อมูลย้อนหลัง ไม่ใช่การพยากรณ์</b> · นับเฉพาะถนนที่สำนักการระบายน้ำ กทม. บันทึกไว้<br>` +
+      `ที่มา: ข้อมูลจุดน้ำท่วมถนน (DDS) กรุงเทพมหานคร data.bangkok.go.th (CC BY)<br>แผนที่: geoBoundaries (CC BY 3.0 IGO)`,
+    name: (d) => d.th,
+  },
+  en: {
+    months: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], yearOffset: 0, locale: "en-US",
+    title: "Where do Bangkok roads flood?", sub: (a, b) => `Official city records, ${a} – ${b}`,
+    intro: `When the city logs <b>a flooded road</b>,<br>that district flashes <b style="color:var(--hot)">red</b><br>and turns <b>brighter blue</b> over time`,
+    low: "fewer", high: "more", now: "flooding now", s1: "days with flooded roads", s2: "district-days",
+    worstTitle: "The worst day on record", worstSub: (n) => `Roads flooded in ${n} districts at once`,
+    topTitle: "Top 10 districts by flood days", topSub: "Days with a recorded road flood in the district", endTitle: "Where do you live?",
+    closing: (n, m) => `${n} of ${m} districts logged road floods<br><span class="em">No record ≠ never flooded</span><br>` +
+      `<span style="font-size:34px;color:var(--muted)">Only roads checked by the city count.<br>In the rainy season, follow BMA and<br>Thai Meteorological Department alerts.</span>`,
+    footer: `<b>Historical records, not a forecast</b> · only roads logged by the city<br>` +
+      `Source: Bangkok (BMA) road-flood records, data.bangkok.go.th (CC BY)<br>Map: geoBoundaries (CC BY 3.0 IGO)`,
+    name: (d) => d.en,
+  },
+}[LANG];
+document.documentElement.lang = LANG;
 const DUR = 46;
 const T_PLAY0 = 4, T_PLAY1 = 28, T_WORST1 = 34, T_TOP1 = 41;
-const MONTHS = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const MONTHS = STR.months;
 const PULSE_DAYS = 30;
 const $ = (id) => document.getElementById(id);
 const start = new Date(DATA.start + "T00:00:00");
 const dayDate = (k) => new Date(start.getTime() + k * 86400000);
-const thaiMonth = (k) => { const d = dayDate(k); return `${MONTHS[d.getMonth()]} ${d.getFullYear() + 543}`; };
-const thaiDay = (k) => { const d = dayDate(k); return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear() + 543}`; };
+const thaiMonth = (k) => { const d = dayDate(k); return `${MONTHS[d.getMonth()]} ${d.getFullYear() + STR.yearOffset}`; };
+const thaiDay = (k) => { const d = dayDate(k); return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear() + STR.yearOffset}`; };
+document.title = STR.title;
+$("intro").innerHTML = STR.intro; $("footer").innerHTML = STR.footer;
+$("lgLow").textContent = STR.low; $("lgHigh").textContent = STR.high; $("lgNow").textContent = STR.now;
+$("s1l").textContent = STR.s1; $("s2l").textContent = STR.s2;
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const ease = (x) => { x = clamp(x); return x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; };
 const maxDays = Math.max(...DATA.districts.map((d) => d.days.length));
@@ -132,10 +162,10 @@ for (let y = firstYear; ; y++) {
   if (k > DATA.totalDays) break;
   const s = document.createElement("span");
   s.style.left = (k / DATA.totalDays * 100) + "%";
-  s.textContent = y + 543;
+  s.textContent = y + STR.yearOffset;
   $("ticks").appendChild(s);
 }
-$("bars").innerHTML = ranked.map((r, j) => `<div class="bar"><span class="n">${j + 1}</span><span class="name">${DATA.districts[r.i].th}</span>` +
+$("bars").innerHTML = ranked.map((r, j) => `<div class="bar"><span class="n">${j + 1}</span><span class="name">${STR.name(DATA.districts[r.i])}</span>` +
   `<span class="track"><span class="fill"></span></span><span class="v">${r.n}</span></div>`).join("");
 const fills = [...document.querySelectorAll(".bar .fill")];
 const bars = [...document.querySelectorAll(".bar")];
@@ -149,10 +179,10 @@ function renderAt(t) {
   const inWorst = t >= T_PLAY1 && t < T_WORST1, inTop = t >= T_WORST1 && t < T_TOP1, inEnd = t >= T_TOP1;
 
   // header
-  let title = "ถนนกรุงเทพฯ ท่วมตรงไหนบ่อย?", sub = `ข้อมูลจริงจาก กทม. ${thaiMonth(0)} – ${thaiMonth(DATA.totalDays)}`;
-  if (inWorst) { title = "วันที่หนักที่สุดในข้อมูล"; sub = `ถนนท่วมพร้อมกัน ${Math.round(ease((t - T_PLAY1) / 1.5) * DATA.worstDistricts.length)} เขตในวันเดียว`; }
-  if (inTop) { title = "10 เขตที่ถนนท่วมบ่อยที่สุด"; sub = "จำนวนวันที่มีบันทึกถนนท่วมในเขต"; }
-  if (inEnd) { title = "ย่านคุณอยู่ตรงไหน?"; sub = ""; }
+  let title = STR.title, sub = STR.sub(thaiMonth(0), thaiMonth(DATA.totalDays));
+  if (inWorst) { title = STR.worstTitle; sub = STR.worstSub(Math.round(ease((t - T_PLAY1) / 1.5) * DATA.worstDistricts.length)); }
+  if (inTop) { title = STR.topTitle; sub = STR.topSub; }
+  if (inEnd) { title = STR.endTitle; sub = ""; }
   $("title").textContent = title; $("subtitle").textContent = sub;
   $("title").style.opacity = t < .6 ? ease(t / .6) : 1;
 
@@ -190,7 +220,7 @@ function renderAt(t) {
   if (!inWorst) {
     let fd = 0, dd = 0;
     for (const [day, ds] of DATA.events) { if (day <= simDay) { fd++; dd += ds.length; } else break; }
-    $("s1").textContent = fd.toLocaleString("th-TH"); $("s2").textContent = dd.toLocaleString("th-TH");
+    $("s1").textContent = fd.toLocaleString(STR.locale); $("s2").textContent = dd.toLocaleString(STR.locale);
   }
   document.querySelector(".stats").style.visibility = inWorst ? "hidden" : "visible";
   $("progress").firstElementChild.style.width = (inWorst ? DATA.worstDay / DATA.totalDays : play) * 100 + "%";
@@ -205,9 +235,7 @@ function renderAt(t) {
   // closing
   const c = $("closing");
   if (inEnd) {
-    c.innerHTML = `${DATA.districts.length - DATA.zeroDistricts.length} จาก ${DATA.districts.length} เขต มีบันทึกถนนท่วม<br>` +
-      `<span class="em">ไม่มีบันทึก ≠ ไม่เคยท่วม</span><br>` +
-      `<span style="font-size:36px;color:var(--muted)">ข้อมูลนี้นับเฉพาะถนนที่ กทม. ตรวจ<br>หน้าฝนติดตามประกาศจาก กทม. และกรมอุตุนิยมวิทยา</span>`;
+    c.innerHTML = STR.closing(DATA.districts.length - DATA.zeroDistricts.length, DATA.districts.length);
     c.style.opacity = ease((t - T_TOP1 - .3) / .8);
   } else c.style.opacity = 0;
 }
