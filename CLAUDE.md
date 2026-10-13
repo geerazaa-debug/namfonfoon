@@ -32,7 +32,9 @@ Rule-based heavy-rain advisory for Bangkok districts (rain thresholds + BMA DDS 
 - `src/engine/` rule-based analyzer, district lookup, geofencing (live); elevation mapper (paused): pure, sync, no I/O
 - `research/` offline studies and pre-registrations (results in `docs/step*_*.md`); never imported by `src/`
 - `src/alerts/` LINE push + Flex card builder
-- `src/api/server.py` FastAPI: `/webhook/line` (signature-verified), `/v1/*` (X-API-Key)
+- `src/api/server.py` FastAPI: `/webhook/line` (signature-verified), `/v1/*` (X-API-Key) except `/v1/public/*`, `/map`, `/report`, PWA assets (public, no identities) and `/v1/reports` (LINE ID token)
+- `src/engine/community.py` + `src/alerts/report_messages.py` + `src/alerts/line_login.py`: citizen water-report flow (chat + LIFF), map view
+- `src/api/static/`: `/map` (PWA), `/report` (LIFF), manifest, service worker, icons
 
 ## Agents
 - `.claude/agents/scout.md` — read-only codebase / API-schema exploration

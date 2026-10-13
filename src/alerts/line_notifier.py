@@ -1,4 +1,4 @@
-"""Async LINE Messaging API push + webhook signature verification."""
+"""Async LINE Messaging API push/reply + webhook signature verification."""
 
 from __future__ import annotations
 
@@ -63,3 +63,12 @@ class LineNotifier:
             max_retries=3,
         )
         return retry_key
+
+    async def reply(self, reply_token: str, messages: list[dict[str, Any]], reply_url: str) -> None:
+        """Answer a webhook event. Replies are free on every LINE plan (pushes count against quota)."""
+        if not 1 <= len(messages) <= MAX_MESSAGES_PER_PUSH:
+            raise ValueError(f"LINE reply accepts 1-{MAX_MESSAGES_PER_PUSH} messages")
+        # No retries: a reply token is single-use, a retried request after a timeout would 400.
+        await request_with_retry(
+            self._client, "POST", reply_url, json={"replyToken": reply_token, "messages": messages}, max_retries=0
+        )

@@ -31,6 +31,11 @@ cp .env.example .env   # fill in values
 | POST | `/v1/risk/assess` | `X-API-Key` | Rain advisory level for a point from rain observations |
 | POST | `/v1/zones/nearby` | `X-API-Key` | Risk zones within radius of a point |
 | POST | `/v1/route/check` | `X-API-Key` | Does a route polyline cross any risk zone? |
+| GET | `/v1/public/reports` | — | Live citizen water reports (no reporter identity) |
+| GET | `/map` | — | Public map of citizen reports (Thai, large type, mobile-first, installable PWA, works offline) |
+| GET | `/report` | LIFF login | Report page that opens inside LINE (big buttons + map pin) |
+| POST | `/v1/reports` | LINE ID token (`Authorization: Bearer`) | Submit a report from the LIFF page |
+| GET | `/v1/public/app-config` | — | LIFF id / report link for the pages |
 
 ## Alert rules
 `level = max(rule_1h, rule_6h)`, then +1 level in DDS hotspot districts when rain is already ≥ moderate. Alerts are sent at **high** or above, and only on observations less than 90 minutes old.
@@ -47,6 +52,27 @@ The 6 h thresholds are the 10th, 25th and 50th percentiles of rainfall in BMA-re
 Set `POLLER_ENABLED=1` (and `LINE_CHANNEL_ACCESS_TOKEN` to actually send). Every 15 min it pulls ThaiWater rain, builds rolling 6 h totals, assesses each LINE subscriber's shared location, and pushes an advisory at **high** or above. The same user + district is not re-alerted within 3 h unless the level rises.
 
 Subscribers, rain history and cooldowns persist in SQLite (`data/floodwatch.db`, WAL mode, auto-created), so a restart does not lose the 6 h totals or re-send alerts. Run **one** process only.
+
+## Citizen water reports ("น้ำถึงไหนแล้ว?")
+Anyone following the LINE OA can report street water in Bangkok with buttons only:
+type **รายงานน้ำ** (or a rich-menu postback `report=start`) → pick a level by body height
+(✅ น้ำลดแล้ว / 🦶 ตาตุ่ม / 🦵 เข่า / 🧍 เอว) → tap **📍 ส่งตำแหน่ง**. All steps use LINE *replies*, which are free on every plan.
+
+- Reports show on `/map` for 3 h. A report is **confirmed** when ≥ 2 distinct reporters within 300 m picked a level within ±1 step; "gone" never confirms "flooded".
+- Coordinates are rounded to ~110 m. The reporter's userId is kept only while the report is live (rate limit 4/h, distinct-reporter count), then nulled; unfollow nulls it at once.
+- A location shared *without* a picked level is still the home-area alert subscription.
+- These are unverified public observations, not measurements; every reply and the map say so. Using them to measure the rain advisory's false-alarm rate needs a pre-registration first.
+- Settings: `community_reports` in `config/settings.yaml` (set `public_map_url` to put the map link in replies).
+
+**LIFF report page** (`/report`): same flow with large buttons and a draggable map pin, inside LINE, no install.
+Setup: create a LINE Login channel **under the same provider** as the Messaging API channel (otherwise its userIds differ
+and the chat and web rate limits split), add a LIFF app (size Full, endpoint `https://<host>/report`, scope `openid`),
+then set `LIFF_ID` and `LINE_LOGIN_CHANNEL_ID`. The server verifies each ID token with LINE. Without them, `/report`
+says it is not open yet and `/map` hides its report button.
+
+**PWA**: `/map` has a manifest + service worker (`/sw.js`), so it can be added to the home screen (Android prompt button,
+iOS "Share → Add to Home Screen" hint). Offline, it shows the last loaded reports with a banner. OSM tiles are not cached
+(tile policy). Web push for neighbour alerts is not built yet.
 
 ## Not yet built
 - Radar QPE input. A data request draft to BMA is in `docs/bma_data_request_draft.md`

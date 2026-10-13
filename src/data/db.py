@@ -1,9 +1,11 @@
-"""SQLite persistence: rain history, alert cooldowns, subscribers.
+"""SQLite persistence: rain history, alert cooldowns, subscribers, citizen water reports.
 
 WAL mode, one shared connection guarded by a lock (the poller and the webhook run in the same
 process). Schema is created/migrated automatically via PRAGMA user_version.
 User coordinates are stored rounded to 0.01 deg (~1.1 km): enough to pick rain stations within
 5 km, without keeping an exact home location.
+Citizen reports keep the reporter's LINE userId only while the report is live (rate limit and
+distinct-reporter counting); `anonymize_reports` and `delete_user` null it afterwards.
 """
 
 from __future__ import annotations
@@ -15,6 +17,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from src.data.validator import GeoPoint
+from src.engine.community import CommunityReport
 
 USER_COORD_DECIMALS = 2
 
@@ -44,6 +47,23 @@ _MIGRATIONS = {
         lon           REAL NOT NULL,
         created_at    TEXT NOT NULL,
         updated_at    TEXT NOT NULL
+    );
+    """,
+    2: """
+    CREATE TABLE community_reports (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        reporter      TEXT,                   -- LINE userId while live; NULL once anonymized
+        level         TEXT NOT NULL,
+        lat           REAL NOT NULL,          -- rounded to community_reports.coord_decimals
+        lon           REAL NOT NULL,
+        district_name TEXT NOT NULL,
+        reported_at   TEXT NOT NULL
+    );
+    CREATE INDEX community_reports_time ON community_reports (reported_at);
+    CREATE TABLE pending_reports (
+        line_user_id TEXT PRIMARY KEY,
+        level        TEXT NOT NULL,
+        created_at   TEXT NOT NULL
     );
     """,
 }
@@ -159,11 +179,68 @@ class Database:
         )
 
     def delete_user(self, user_id: str) -> None:
+        """Unfollow: drop subscription, cooldowns, pending report; keep past reports but anonymized."""
         self._write("DELETE FROM users WHERE line_user_id=?", [(user_id,)])
         self.delete_cooldowns(user_id)
+        self._write("DELETE FROM pending_reports WHERE line_user_id=?", [(user_id,)])
+        self._write("UPDATE community_reports SET reporter=NULL WHERE reporter=?", [(user_id,)])
 
     def users(self) -> dict[str, GeoPoint]:
         return {r[0]: GeoPoint(lat=r[1], lon=r[2]) for r in self._query("SELECT line_user_id, lat, lon FROM users")}
 
     def user_count(self) -> int:
         return int(self._query("SELECT COUNT(*) FROM users")[0][0])
+
+    # ---- community reports ----
+    def set_pending_report(self, user_id: str, level: str, now: datetime) -> None:
+        self._write(
+            "INSERT INTO pending_reports VALUES (?,?,?) ON CONFLICT(line_user_id) DO UPDATE SET "
+            "level=excluded.level, created_at=excluded.created_at",
+            [(user_id, level, ts(now))],
+        )
+
+    def pop_pending_report(self, user_id: str, since: datetime) -> str | None:
+        """The level picked since `since`, consumed so one location makes one report."""
+        rows = self._query("SELECT level, created_at FROM pending_reports WHERE line_user_id=?", (user_id,))
+        if not rows:
+            return None
+        self._write("DELETE FROM pending_reports WHERE line_user_id=?", [(user_id,)])
+        return rows[0][0] if rows[0][1] >= ts(since) else None
+
+    def add_report(
+        self, reporter: str, level: str, location: GeoPoint, district: str, now: datetime, decimals: int
+    ) -> None:
+        self._write(
+            "INSERT INTO community_reports (reporter, level, lat, lon, district_name, reported_at) "
+            "VALUES (?,?,?,?,?,?)",
+            [(reporter, level, round(location.lat, decimals), round(location.lon, decimals), district, ts(now))],
+        )
+
+    def report_count(self, reporter: str, since: datetime) -> int:
+        q = "SELECT COUNT(*) FROM community_reports WHERE reporter=? AND reported_at>=?"
+        return int(self._query(q, (reporter, ts(since)))[0][0])
+
+    def live_reports(self, since: datetime) -> list[CommunityReport]:
+        rows = self._query(
+            "SELECT reporter, level, lat, lon, district_name, reported_at FROM community_reports "
+            "WHERE reported_at>=? AND reporter IS NOT NULL",
+            (ts(since),),
+        )
+        return [
+            CommunityReport(
+                reporter=r[0],
+                level=r[1],
+                location=GeoPoint(lat=r[2], lon=r[3]),
+                district=r[4],
+                reported_at=parse_ts(r[5]),
+            )
+            for r in rows
+        ]
+
+    def anonymize_reports(self, older_than: datetime) -> None:
+        """Expired reports stay (for later verification studies) without who sent them."""
+        self._write(
+            "UPDATE community_reports SET reporter=NULL WHERE reported_at<? AND reporter IS NOT NULL",
+            [(ts(older_than),)],
+        )
+        self._write("DELETE FROM pending_reports WHERE created_at<?", [(ts(older_than),)])

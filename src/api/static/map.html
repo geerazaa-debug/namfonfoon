@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1565c0">
+<title>น้ำถึงไหนแล้ว?</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="apple-mobile-web-app-title" content="น้ำถึงไหน">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#555; --card:#f4f6f8; --line:#d0d5da; --accent:#1565c0; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#121417; --fg:#f1f3f5; --muted:#b0b6bc; --card:#1e2227; --line:#3a4048; --accent:#64b5f6; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--fg);
+    font-family:"Sarabun", system-ui, sans-serif; font-size:19px; line-height:1.45; }
+  body { display:flex; flex-direction:column; }
+  header { padding:12px 16px; border-bottom:1px solid var(--line); }
+  h1 { margin:0; font-size:1.45rem; }
+  .sub { color:var(--muted); font-size:.95rem; }
+  #map { flex:1; min-height:300px; }
+  .bar { display:flex; gap:8px; flex-wrap:wrap; padding:10px 16px; border-top:1px solid var(--line); background:var(--card); }
+  .legend { display:flex; gap:12px; flex-wrap:wrap; align-items:center; font-size:1rem; }
+  .legend span { white-space:nowrap; }
+  .dot { display:inline-block; width:14px; height:14px; border-radius:50%; vertical-align:middle; margin-right:4px; }
+  button { font:inherit; font-size:1.05rem; font-weight:700; padding:10px 16px; border-radius:12px;
+    border:2px solid var(--accent); background:var(--bg); color:var(--accent); cursor:pointer; min-height:48px; }
+  .how { padding:10px 16px; font-size:1rem; }
+  .how b { color:var(--accent); }
+  .note { color:var(--muted); font-size:.85rem; padding:0 16px 12px; }
+  .pin { display:flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%;
+    background:#fff; border:5px solid; font-size:22px; box-shadow:0 2px 6px rgba(0,0,0,.35); }
+  .pin.unconfirmed { border-style:dashed; opacity:.8; }
+  .leaflet-popup-content { font-family:"Sarabun", system-ui, sans-serif; font-size:18px; line-height:1.5; margin:12px 16px; }
+  .primary { background:var(--accent); color:var(--bg); }
+  .offline { background:#fff3cd; color:#5c4400; padding:8px 16px; font-size:.95rem; }
+  .empty { position:absolute; z-index:500; left:50%; top:16px; transform:translateX(-50%); background:var(--card);
+    color:var(--fg); padding:10px 16px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.25); max-width:90%; text-align:center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🌊 น้ำถึงไหนแล้ว?</h1>
+  <div class="sub">รายงานน้ำท่วมจากคนในพื้นที่ กรุงเทพฯ · อัปเดต <span id="updated">-</span></div>
+</header>
+<div class="offline" id="offline" hidden>📴 ออฟไลน์อยู่ กำลังแสดงข้อมูลล่าสุดที่โหลดไว้</div>
+<div id="map" style="position:relative"><div id="empty" class="empty" hidden>ตอนนี้ยังไม่มีรายงานน้ำท่วม 👍</div></div>
+<div class="bar">
+  <div class="legend" id="legend"></div>
+  <button id="me" type="button">📍 ตำแหน่งของฉัน</button>
+  <button id="report" class="primary" type="button" hidden>🌊 รายงานน้ำ</button>
+  <button id="install" type="button" hidden>📲 เพิ่มลงหน้าจอ</button>
+</div>
+<div class="how">อยากช่วยรายงาน? แอดไลน์ FloodWatch แล้วพิมพ์ <b>รายงานน้ำ</b> กดเลือก 2 ครั้งก็เสร็จ</div>
+<div class="how" id="iosHint" hidden>📲 ใช้บ่อย? กดปุ่ม <b>แชร์</b> ของ Safari แล้วเลือก <b>เพิ่มไปยังหน้าจอโฮม</b></div>
+<div class="note">ข้อมูลเป็นรายงานจากประชาชน ยังไม่ได้ตรวจสอบโดยหน่วยงาน · ขอบเส้นประ = มีผู้รายงานคนเดียว ·
+  รายงานหายไปเองหลัง <span id="ttl">3</span> ชม. · แผนที่ © OpenStreetMap contributors</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const legend = document.getElementById("legend");
+function drawLegend(levels) {
+  legend.replaceChildren();
+  for (const lv of levels) {
+    const s = document.createElement("span");
+    const dot = document.createElement("i");
+    dot.className = "dot"; dot.style.background = lv.color;
+    s.append(dot, `${lv.emoji} ${lv.label}`);
+    legend.append(s);
+  }
+}
+
+const map = L.map("map", { zoomControl: true }).setView([13.75, 100.52], 11);
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19, attribution: "&copy; OpenStreetMap contributors",
+}).addTo(map);
+const layer = L.layerGroup().addTo(map);
+
+function ago(m) { return m < 1 ? "เมื่อสักครู่" : m < 60 ? `${m} นาทีที่แล้ว` : `${Math.floor(m / 60)} ชม. ${m % 60} นาทีที่แล้ว`; }
+
+function popup(r) {
+  const d = document.createElement("div");
+  const head = document.createElement("div");
+  head.style.fontWeight = "700"; head.style.fontSize = "1.15em";
+  head.textContent = `${r.emoji} ${r.label}`;
+  const meta = document.createElement("div");
+  meta.textContent = `เขต${r.district} · ${ago(r.minutes_ago)}`;
+  const conf = document.createElement("div");
+  conf.textContent = r.confirmed ? `✔️ ยืนยันแล้ว ${r.reporters} คน` : "ผู้รายงาน 1 คน (ยังไม่ยืนยัน)";
+  d.append(head, meta, conf);
+  return d;
+}
+
+async function load() {
+  try {
+    const res = await fetch("/v1/public/reports", { cache: "no-store" });
+    const data = await res.json();
+    document.getElementById("offline").hidden = res.headers.get("X-FW-Offline") !== "1";
+    drawLegend(data.levels);
+    layer.clearLayers();
+    for (const r of data.reports) {
+      const icon = L.divIcon({
+        className: "", iconSize: [44, 44], iconAnchor: [22, 22],
+        html: `<div class="pin${r.confirmed ? "" : " unconfirmed"}" style="border-color:${r.color}">${r.emoji}</div>`,
+      });
+      L.marker([r.lat, r.lon], { icon, title: `${r.label} เขต${r.district}` }).bindPopup(popup(r)).addTo(layer);
+    }
+    document.getElementById("empty").hidden = data.reports.length > 0;
+    document.getElementById("ttl").textContent = data.ttl_hours;
+    document.getElementById("updated").textContent =
+      new Date(data.generated_at).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }) + " น.";
+  } catch (e) {
+    document.getElementById("updated").textContent = "โหลดไม่สำเร็จ ลองใหม่อีกครั้ง";
+  }
+}
+
+document.getElementById("me").addEventListener("click", () => {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    (p) => { map.setView([p.coords.latitude, p.coords.longitude], 15); L.circleMarker([p.coords.latitude, p.coords.longitude], { radius: 9 }).addTo(map); },
+    () => {}, { enableHighAccuracy: true, timeout: 10000 });
+});
+
+load();
+setInterval(load, 120000);
+
+fetch("/v1/public/app-config").then((r) => r.json()).then((cfg) => {
+  if (!cfg.report_url) return;
+  const b = document.getElementById("report");
+  b.hidden = false;
+  b.addEventListener("click", () => { location.href = cfg.report_url; });
+}).catch(() => {});
+
+if ("serviceWorker" in navigator) {
+  // First visit: the worker takes control after the first fetch; refetch so offline has a copy.
+  navigator.serviceWorker.addEventListener("controllerchange", load, { once: true });
+  navigator.serviceWorker.register("/sw.js").catch(() => {});
+}
+let installEvt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault(); installEvt = e;
+  document.getElementById("install").hidden = false;
+});
+document.getElementById("install").addEventListener("click", async () => {
+  if (!installEvt) return;
+  installEvt.prompt(); await installEvt.userChoice; installEvt = null;
+  document.getElementById("install").hidden = true;
+});
+const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !standalone) document.getElementById("iosHint").hidden = false;
+</script>
+</body>
+</html>

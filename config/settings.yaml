@@ -47,3 +47,21 @@ rain_pipeline:
 
 storage:
   db_path: data/floodwatch.db   # relative to project root; override with env FLOODWATCH_DB
+
+# Citizen water-level reports via LINE ("รายงานน้ำ"), shown on the public /map page
+community_reports:
+  reply_url: https://api.line.me/v2/bot/message/reply
+  id_token_verify_url: https://api.line.me/oauth2/v2.1/verify   # LIFF page (/report) auth
+  trigger_texts: ["รายงานน้ำ", "รายงาน", "report"]
+  ttl_hours: 3                # a report disappears from the map after this
+  pending_ttl_min: 10         # time between picking a level and sending the location
+  coord_decimals: 3           # ~110 m: stored and published coordinates are rounded to this
+  confirm_radius_m: 300       # other reporters within this distance can confirm a report
+  confirm_min_reporters: 2    # distinct reporters (incl. the first) for "confirmed"
+  max_reports_per_hour: 4     # per LINE user
+  public_map_url: ""          # e.g. https://<host>/map; empty -> no link in replies
+  levels:                     # rank 0 = water gone; quick-reply labels must stay <= 20 chars
+    - {key: clear, rank: 0, emoji: "✅", label: "น้ำลดแล้ว", color: "#2E7D32"}
+    - {key: ankle, rank: 1, emoji: "🦶", label: "ถึงตาตุ่ม", color: "#F9A825"}
+    - {key: knee, rank: 2, emoji: "🦵", label: "ถึงเข่า", color: "#EF6C00"}
+    - {key: waist, rank: 3, emoji: "🧍", label: "ถึงเอว", color: "#C62828"}
