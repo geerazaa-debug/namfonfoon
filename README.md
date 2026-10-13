@@ -74,6 +74,9 @@ says it is not open yet and `/map` hides its report button.
 iOS "Share → Add to Home Screen" hint). Offline, it shows the last loaded reports with a banner. OSM tiles are not cached
 (tile policy). Web push for neighbour alerts is not built yet.
 
+## Deploy
+Free always-on hosting on Oracle Cloud: see [`docs/DEPLOY.md`](docs/DEPLOY.md) and `deploy/`.
+
 ## Not yet built
 - Radar QPE input. A data request draft to BMA is in `docs/bma_data_request_draft.md`
 - Multi-instance deployment

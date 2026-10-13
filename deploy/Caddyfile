@@ -1,0 +1,5 @@
+# __DOMAIN__ is replaced by setup.sh. Caddy obtains and renews the HTTPS certificate itself.
+__DOMAIN__ {
+	encode gzip
+	reverse_proxy 127.0.0.1:8000
+}

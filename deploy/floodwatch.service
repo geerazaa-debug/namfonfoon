@@ -1,0 +1,22 @@
+[Unit]
+Description=FloodWatch API + rain poller (single process)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=floodwatch
+Group=floodwatch
+WorkingDirectory=/opt/floodwatch
+EnvironmentFile=/etc/floodwatch.env
+# One worker only: the rain poller runs in-process (see src/api/server.py).
+ExecStart=/opt/floodwatch/.venv/bin/uvicorn src.api.server:app --host 127.0.0.1 --port 8000 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/floodwatch
+
+[Install]
+WantedBy=multi-user.target
