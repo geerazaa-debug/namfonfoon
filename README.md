@@ -27,15 +27,16 @@ cp .env.example .env   # fill in values
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | GET | `/health` | — | Liveness |
-| POST | `/webhook/line` | `X-Line-Signature` | Registers a user's shared location; removes on unfollow |
+| POST | `/webhook/line` | `X-Line-Signature` | Subscriptions, citizen reports, route checks (acks at once, handles events in the background) |
 | POST | `/v1/risk/assess` | `X-API-Key` | Rain advisory level for a point from rain observations |
 | POST | `/v1/zones/nearby` | `X-API-Key` | Risk zones within radius of a point |
 | POST | `/v1/route/check` | `X-API-Key` | Does a route polyline cross any risk zone? |
 | GET | `/v1/public/reports` | — | Live citizen water reports (no reporter identity) |
-| GET | `/map` | — | Public map of citizen reports (Thai, large type, mobile-first, installable PWA, works offline) |
+| GET | `/v1/public/rain` | — | Last hour's rain at wet ThaiWater gauges (empty unless the poller runs) |
+| GET | `/map` | — | Public map of citizen reports + gauge rain; `#from=lat,lon&to=lat,lon` draws a checked route (Thai, large type, mobile-first, installable PWA, works offline) |
 | GET | `/report` | LIFF login | Report page that opens inside LINE (big buttons + map pin) |
 | POST | `/v1/reports` | LINE ID token (`Authorization: Bearer`) | Submit a report from the LIFF page |
-| GET | `/v1/public/app-config` | — | LIFF id / report link for the pages |
+| GET | `/v1/public/app-config` | — | LIFF id / report link / OSRM URL for the pages |
 
 ## Alert rules
 `level = max(rule_1h, rule_6h)`, then +1 level in DDS hotspot districts when rain is already ≥ moderate. Alerts are sent at **high** or above, and only on observations less than 90 minutes old.
@@ -73,6 +74,27 @@ says it is not open yet and `/map` hides its report button.
 **PWA**: `/map` has a manifest + service worker (`/sw.js`), so it can be added to the home screen (Android prompt button,
 iOS "Share → Add to Home Screen" hint). Offline, it shows the last loaded reports with a banner. OSM tiles are not cached
 (tile policy). Web push for neighbour alerts is not built yet.
+
+## Route check ("เช็คเส้นทาง")
+Type **เช็คเส้นทาง** (or rich-menu postback `route=start`) → tap **📍 จุดเริ่มต้น** → tap **🏁 ปลายทาง**. LINE's location
+picker lets people search a place name or drag the map, so no typing of addresses. The reply lists, in route order:
+
+- the wettest gauge per district within 3 km of the driving route (ThaiWater, last hour, ignored if older than 90 min),
+- live citizen water reports within 300 m of it (not "water gone"),
+- DDS flood-hotspot districts it passes, when there is rain or water,
+- a `/map` link that draws the route.
+
+Verdict: **warn** at ≥ 10 mm/h at any gauge or a knee-deep report; **caution** for any rain or report; **no data** when no
+fresh gauge is near the route. It is measured rain and public reports, not a forecast, and the reply says so.
+
+- **Gauges are sparse:** about 33 ThaiWater stations cover the Greater Bangkok box, so a 20 km route may have 2-3 nearby.
+  The reply says how many gauges were checked. Dense coverage needs BMA gauges or radar (see "Not yet built").
+- Routing: OSRM public demo server (car profile, fair use, no SLA). If it fails, the check runs along the straight line
+  and says so. Both points must be inside `area_of_interest`.
+- Privacy: the start point is held rounded to ~110 m only until the destination arrives (10 min). Route points are never
+  logged, and the map link carries them in the `#fragment`, which browsers do not send to the server: `/map` asks OSRM
+  for the line itself.
+- Settings: `route_check` in `config/settings.yaml`.
 
 ## Deploy
 Free always-on hosting on Oracle Cloud: see [`docs/DEPLOY.md`](docs/DEPLOY.md) and `deploy/`.

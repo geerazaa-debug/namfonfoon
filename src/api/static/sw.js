@@ -1,6 +1,6 @@
 // Offline shell for the public map. Report data: network first, last copy when offline.
-// OSM tiles are deliberately not cached (tile usage policy forbids bulk caching).
-const VERSION = "fw-v1";
+// OSM tiles are deliberately not cached (tile usage policy forbids bulk caching); OSRM routes neither.
+const VERSION = "fw-v2";
 const SHELL = ["/map", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png"];
 const CDN = ["https://cdnjs.cloudflare.com/", "https://fonts.googleapis.com/", "https://fonts.gstatic.com/"];
 
@@ -47,6 +47,7 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(req.url);
   if (url.origin === location.origin) {
     if (url.pathname === "/v1/public/reports") return e.respondWith(networkFirst(req, true));
+    if (url.pathname === "/v1/public/rain") return e.respondWith(networkFirst(req, false));
     if (SHELL.includes(url.pathname)) return e.respondWith(networkFirst(req, false));
     return;
   }

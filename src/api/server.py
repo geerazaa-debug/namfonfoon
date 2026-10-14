@@ -1,4 +1,4 @@
-"""FastAPI app: LINE webhook + B2B risk/routing API + background rain poller + citizen report map.
+"""FastAPI app: LINE webhook + B2B risk/routing API + background rain poller + citizen report map + route check.
 
 Subscribers, rain history and alert cooldowns persist in SQLite (`storage.db_path`, or env
 FLOODWATCH_DB). One process only: the poller must not run in several workers at once.
@@ -11,28 +11,33 @@ import json
 import logging
 import os
 import secrets
+import traceback
 from collections.abc import AsyncIterator
 from contextlib import AsyncExitStack, asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request
+import httpx
+from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from src.alerts import report_messages as rm
+from src.alerts import route_messages as rtm
 from src.alerts.dispatcher import AlertPipeline, CooldownTracker, default_fetch
 from src.alerts.line_login import InvalidIdToken, verify_id_token
 from src.alerts.line_notifier import LineNotifier, verify_signature
 from src.config import risk_thresholds, settings
 from src.data.db import Database
+from src.data.osrm import fetch_route
 from src.data.thaiwater_rain import RainAccumulator
-from src.data.validator import GeoPoint
+from src.data.validator import BoundingBox, GeoPoint
 from src.engine.community import MapReport, ReportLevel, map_view, report_levels
 from src.engine.districts import district_index
 from src.engine.geofence import FloodZone, ZoneHit, zones_near_point, zones_on_route
 from src.engine.risk_analyzer import AlertInput, Assessment, RuleBasedAnalyzer
+from src.engine.route_check import RainClass, RouteCheck, check_route, rain_class, rain_classes
 
 log = logging.getLogger(__name__)
 
@@ -90,7 +95,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
             pipeline = None
 
 
-app = FastAPI(title="FloodWatch Rain Advisory", version="0.3.0", lifespan=lifespan)
+app = FastAPI(title="FloodWatch Rain Advisory", version="0.4.0", lifespan=lifespan)
 
 
 def require_api_key(x_api_key: str = Header(default="")) -> None:
@@ -157,32 +162,77 @@ class PublicReports(BaseModel):
     reports: list[MapReport]
 
 
-@app.get("/v1/public/reports")
-def public_reports() -> PublicReports:
-    """Live citizen reports for the public map. No auth: contains no reporter identity."""
+def live_map_reports(now: datetime) -> list[MapReport]:
     cfg = settings()["community_reports"]
-    now = datetime.now(UTC)
     ttl = timedelta(hours=cfg["ttl_hours"])
-    reports = map_view(
+    return map_view(
         get_db().live_reports(now - ttl),
         now,
         confirm_radius_m=cfg["confirm_radius_m"],
         confirm_min_reporters=cfg["confirm_min_reporters"],
         ttl=ttl,
     )
+
+
+@app.get("/v1/public/reports")
+def public_reports() -> PublicReports:
+    """Live citizen reports for the public map. No auth: contains no reporter identity."""
+    now = datetime.now(UTC)
     levels = sorted(report_levels().values(), key=lambda lv: lv.rank)
-    return PublicReports(generated_at=now, ttl_hours=cfg["ttl_hours"], levels=levels, reports=reports)
+    ttl_hours = settings()["community_reports"]["ttl_hours"]
+    return PublicReports(generated_at=now, ttl_hours=ttl_hours, levels=levels, reports=live_map_reports(now))
+
+
+class PublicRain(BaseModel):
+    lat: float
+    lon: float
+    district: str | None
+    rain_1h_mm: float
+    rain: RainClass
+    minutes_ago: int
+
+
+class PublicRainView(BaseModel):
+    generated_at: datetime
+    classes: list[RainClass]  # map legend, lightest first
+    stations: list[PublicRain]  # wet gauges only (rain >= lightest class)
+
+
+@app.get("/v1/public/rain")
+def public_rain() -> PublicRainView:
+    """Last hour's rain at gauges for the public map (ThaiWater; empty unless the poller runs)."""
+    now = datetime.now(UTC)
+    classes = rain_classes()
+    since = now - timedelta(minutes=settings()["route_check"]["max_rain_age_min"])
+    stations = [
+        PublicRain(
+            lat=s.location.lat,
+            lon=s.location.lon,
+            district=s.district,
+            rain_1h_mm=s.rain_1h_mm,
+            rain=cls,
+            minutes_ago=int((now - s.observed_at).total_seconds() // 60),
+        )
+        for s in get_db().latest_rain(since)
+        if (cls := rain_class(s.rain_1h_mm, classes))
+    ]
+    return PublicRainView(generated_at=now, classes=classes, stations=stations)
 
 
 class AppConfig(BaseModel):
     liff_id: str | None
     report_url: str | None  # opens the LIFF report page inside LINE
+    osrm_url: str  # /map draws a checked route itself, so route points never reach this server
 
 
 @app.get("/v1/public/app-config")
 def app_config() -> AppConfig:
     liff_id = os.environ.get("LIFF_ID") or None
-    return AppConfig(liff_id=liff_id, report_url=f"https://liff.line.me/{liff_id}" if liff_id else None)
+    return AppConfig(
+        liff_id=liff_id,
+        report_url=f"https://liff.line.me/{liff_id}" if liff_id else None,
+        osrm_url=settings()["route_check"]["osrm_url"],
+    )
 
 
 class ReportRequest(BaseModel):
@@ -253,9 +303,56 @@ async def send_reply(reply_token: str, messages: list[dict[str, Any]]) -> None:
         log.exception("LINE reply failed")
 
 
-def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]]:
+async def run_route_check(a: GeoPoint, b: GeoPoint, now: datetime) -> tuple[RouteCheck, bool]:
+    """(check, straight_line). Falls back to the straight line when OSRM fails or finds no road."""
+    cfg = settings()["route_check"]
+    try:
+        path = await fetch_route(a, b)
+    except (httpx.HTTPError, ValidationError) as exc:
+        log.warning("route service failed: %s", type(exc).__name__)  # exception text carries coordinates
+        path = None
+    route = path.points if path else [a, b]
+    check = check_route(
+        route,
+        get_db().latest_rain(now - timedelta(minutes=cfg["max_rain_age_min"])),
+        live_map_reports(now),
+        now,
+        station_buffer_km=cfg["station_buffer_km"],
+        report_buffer_m=cfg["report_buffer_m"],
+        max_rain_age=timedelta(minutes=cfg["max_rain_age_min"]),
+        warn_rain_mm=cfg["warn_rain_mm"],
+        warn_report_rank=cfg["warn_report_rank"],
+        levels=report_levels(),
+        district_of=district_index().locate,
+    )
+    log.info("route check verdict=%s", check.verdict)  # never log points
+    return check, path is None
+
+
+async def route_step(user_id: str, loc: GeoPoint, now: datetime) -> list[dict[str, Any]] | None:
+    """Location share during a route check; None when no route check is in progress."""
+    cfg = settings()["route_check"]
+    db = get_db()
+    pending = db.pending_route(user_id, now - timedelta(minutes=cfg["pending_ttl_min"]))
+    if pending is None:
+        return None
+    aoi = BoundingBox(**{k: v for k, v in settings()["area_of_interest"].items() if k != "name"})
+    if not aoi.contains(loc):
+        db.clear_pending_route(user_id)
+        return [rtm.outside_area()]
+    if pending.origin is None:
+        db.set_route_origin(user_id, loc, now, cfg["coord_decimals"])
+        return [rtm.ask_destination()]
+    db.clear_pending_route(user_id)
+    check, straight = await run_route_check(pending.origin, loc, now)
+    map_url = settings()["community_reports"]["public_map_url"]
+    return [rtm.result(check, straight_line=straight, map_url=map_url, a=pending.origin, b=loc)]
+
+
+async def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]]:
     """Apply one webhook event; returns the reply messages (possibly none)."""
     cfg = settings()["community_reports"]
+    route_cfg = settings()["route_check"]
     levels = report_levels()
     user_id = ev.get("source", {}).get("userId")
     if not user_id:
@@ -265,10 +362,15 @@ def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]]:
     if kind == "unfollow":
         db.delete_user(user_id)  # also cooldowns + pending report; anonymizes past reports
         return []
-    if kind == "message" and msg.get("type") == "text" and msg.get("text", "").strip() in cfg["trigger_texts"]:
+    text = msg.get("text", "").strip() if kind == "message" and msg.get("type") == "text" else None
+    if text in cfg["trigger_texts"]:
         return [rm.ask_level(levels)]
-    if kind == "postback":
-        data = ev.get("postback", {}).get("data", "")
+    data = ev.get("postback", {}).get("data", "") if kind == "postback" else None
+    if text in route_cfg["trigger_texts"] or data == rtm.POSTBACK_START:
+        db.anonymize_reports(now - timedelta(hours=cfg["ttl_hours"]))  # also drops stale pending steps
+        db.start_route(user_id, now)
+        return [rtm.ask_origin(route_cfg["pending_ttl_min"])]
+    if data is not None:
         key = data.removeprefix(rm.POSTBACK_PREFIX) if data.startswith(rm.POSTBACK_PREFIX) else None
         if key == "start":  # rich-menu button
             return [rm.ask_level(levels)]
@@ -279,6 +381,8 @@ def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]]:
     if kind == "message" and msg.get("type") == "location":
         loc = GeoPoint(lat=msg["latitude"], lon=msg["longitude"])
         level = db.pop_pending_report(user_id, now - timedelta(minutes=cfg["pending_ttl_min"]))
+        if level is None and (route_reply := await route_step(user_id, loc, now)) is not None:
+            return route_reply
         if level is None:  # plain location share = alert subscription (home area)
             db.upsert_user(user_id, loc, district_name(loc), now)
             log.info("registered location for subscriber")  # never log userId/coords
@@ -292,17 +396,28 @@ def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]]:
     return []
 
 
+async def process_events(events: list[dict[str, Any]], now: datetime) -> None:
+    for ev in events:
+        if ev.get("deliveryContext", {}).get("isRedelivery"):
+            continue  # already handled; replaying would e.g. turn a consumed report location into a subscription
+        try:
+            replies = await handle_event(ev, now)
+        except Exception as exc:  # stack without the message: validation errors echo input coordinates
+            stack = "".join(traceback.format_tb(exc.__traceback__))
+            log.error("webhook event failed: %s\n%s", type(exc).__name__, stack)
+            continue
+        if replies and ev.get("replyToken"):
+            await send_reply(ev["replyToken"], replies)
+
+
 @app.post("/webhook/line")
-async def line_webhook(request: Request, x_line_signature: str = Header(default="")) -> dict[str, str]:
+async def line_webhook(
+    request: Request, background: BackgroundTasks, x_line_signature: str = Header(default="")
+) -> dict[str, str]:
+    """Acknowledge at once; events (a route check calls OSRM) run after the response is sent."""
     secret = os.environ.get("LINE_CHANNEL_SECRET", "")
     body = await request.body()
     if not secret or not verify_signature(body, x_line_signature, secret):
         raise HTTPException(status_code=401, detail="bad signature")
-    now = datetime.now(UTC)
-    for ev in json.loads(body).get("events", []):
-        if ev.get("deliveryContext", {}).get("isRedelivery"):
-            continue  # already handled; replaying would e.g. turn a consumed report location into a subscription
-        replies = handle_event(ev, now)
-        if replies and ev.get("replyToken"):
-            await send_reply(ev["replyToken"], replies)
+    background.add_task(process_events, json.loads(body).get("events", []), datetime.now(UTC))
     return {"status": "ok"}

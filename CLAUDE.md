@@ -34,6 +34,7 @@ Rule-based heavy-rain advisory for Bangkok districts (rain thresholds + BMA DDS 
 - `src/alerts/` LINE push + Flex card builder
 - `src/api/server.py` FastAPI: `/webhook/line` (signature-verified), `/v1/*` (X-API-Key) except `/v1/public/*`, `/map`, `/report`, PWA assets (public, no identities) and `/v1/reports` (LINE ID token)
 - `src/engine/community.py` + `src/alerts/report_messages.py` + `src/alerts/line_login.py`: citizen water-report flow (chat + LIFF), map view
+- `src/engine/route_check.py` + `src/data/osrm.py` + `src/alerts/route_messages.py`: route check (gauge rain + reports along a driving route); route points are never logged or sent to `/map`'s server
 - `src/api/static/`: `/map` (PWA), `/report` (LIFF), manifest, service worker, icons
 
 ## Agents

@@ -65,3 +65,23 @@ community_reports:
     - {key: ankle, rank: 1, emoji: "🦶", label: "ถึงตาตุ่ม", color: "#F9A825"}
     - {key: knee, rank: 2, emoji: "🦵", label: "ถึงเข่า", color: "#EF6C00"}
     - {key: waist, rank: 3, emoji: "🧍", label: "ถึงเอว", color: "#C62828"}
+
+# Route check via LINE ("เช็คเส้นทาง"): measured gauge rain near a route + live citizen reports on it
+route_check:
+  trigger_texts: ["เช็คเส้นทาง", "เส้นทาง", "route"]
+  # OSRM public demo server: car profile only, fair use (<= 1 req/s), no SLA. Also called by /map.
+  osrm_url: https://router.project-osrm.org/route/v1/driving
+  timeout_s: 15
+  max_retries: 1
+  pending_ttl_min: 10          # time between sharing the start point and the destination
+  coord_decimals: 3            # start point is held this coarse, only until the destination arrives
+  station_buffer_km: 3         # rain gauges within this distance of the route
+  report_buffer_m: 300         # citizen reports within this distance of the route
+  max_rain_age_min: 90         # older gauge readings are ignored
+  warn_rain_mm: 10             # 1 h rain at any gauge on the route -> "warn"
+  warn_report_rank: 2          # a report at this level rank or deeper (knee) -> "warn"
+  rain_classes:                # by 1 h rain at a gauge; the highest matching min_mm wins
+    - {key: light, min_mm: 0.5, emoji: "🌦️", label: "ฝนเล็กน้อย"}
+    - {key: moderate, min_mm: 5, emoji: "🌧️", label: "ฝนปานกลาง"}
+    - {key: heavy, min_mm: 10, emoji: "⛈️", label: "ฝนหนัก"}
+    - {key: very_heavy, min_mm: 30, emoji: "🚨", label: "ฝนหนักมาก"}

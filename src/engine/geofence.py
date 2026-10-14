@@ -32,8 +32,11 @@ def haversine_km(a: GeoPoint, b: GeoPoint) -> float:
     return 2 * EARTH_RADIUS_KM * math.asin(math.sqrt(h))
 
 
-def point_segment_km(p: GeoPoint, a: GeoPoint, b: GeoPoint) -> float:
-    """Distance from p to segment ab via a local equirectangular projection (fine for < ~100 km)."""
+def segment_closest(p: GeoPoint, a: GeoPoint, b: GeoPoint) -> tuple[float, float]:
+    """(km from p to segment ab, fraction 0..1 along ab of the closest point).
+
+    Local equirectangular projection: fine for < ~100 km.
+    """
     k = math.cos(math.radians(p.lat))
     ax, ay = (a.lon - p.lon) * k, a.lat - p.lat
     bx, by = (b.lon - p.lon) * k, b.lat - p.lat
@@ -41,7 +44,11 @@ def point_segment_km(p: GeoPoint, a: GeoPoint, b: GeoPoint) -> float:
     seg2 = dx * dx + dy * dy
     t = 0.0 if seg2 == 0 else max(0.0, min(1.0, -(ax * dx + ay * dy) / seg2))
     cx, cy = ax + t * dx, ay + t * dy
-    return math.radians(math.hypot(cx, cy)) * EARTH_RADIUS_KM
+    return math.radians(math.hypot(cx, cy)) * EARTH_RADIUS_KM, t
+
+
+def point_segment_km(p: GeoPoint, a: GeoPoint, b: GeoPoint) -> float:
+    return segment_closest(p, a, b)[0]
 
 
 def zones_near_point(p: GeoPoint, zones: Iterable[FloodZone], buffer_km: float = 0.0) -> list[ZoneHit]:

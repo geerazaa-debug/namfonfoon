@@ -80,7 +80,8 @@ def test_web_report_shares_rate_limit_with_chat(client, memory_db):
 
 def test_app_config_and_pwa_assets(client, monkeypatch):
     monkeypatch.delenv("LIFF_ID", raising=False)
-    assert client.get("/v1/public/app-config").json() == {"liff_id": None, "report_url": None}
+    cfg = client.get("/v1/public/app-config").json()
+    assert cfg["liff_id"] is None and cfg["report_url"] is None and cfg["osrm_url"].startswith("https://")
     monkeypatch.setenv("LIFF_ID", "1234-abcd")
     assert client.get("/v1/public/app-config").json()["report_url"] == "https://liff.line.me/1234-abcd"
 

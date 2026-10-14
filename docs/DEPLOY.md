@@ -26,7 +26,7 @@ the database in `/var/lib/floodwatch` and the env file are kept. Previous releas
 ## LINE console
 - Messaging API channel → Webhook URL `https://<domain>/webhook/line`, enable "Use webhook", **leave webhook
   redelivery off** (redelivered events are skipped anyway).
-- Rich menu button: action *Text* "รายงานน้ำ", or *Postback* `report=start`; or a URI button to `https://liff.line.me/<LIFF_ID>`.
+- Rich menu buttons: action *Text* "รายงานน้ำ", or *Postback* `report=start`; or a URI button to `https://liff.line.me/<LIFF_ID>`. Route check: *Text* "เช็คเส้นทาง" or *Postback* `route=start`.
 - LIFF: see README "Citizen water reports". Endpoint `https://<domain>/report`.
 - Set `community_reports.public_map_url: https://<domain>/map` in `config/settings.yaml`, commit, push again.
 

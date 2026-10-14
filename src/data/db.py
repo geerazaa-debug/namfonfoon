@@ -6,6 +6,7 @@ User coordinates are stored rounded to 0.01 deg (~1.1 km): enough to pick rain s
 5 km, without keeping an exact home location.
 Citizen reports keep the reporter's LINE userId only while the report is live (rate limit and
 distinct-reporter counting); `anonymize_reports` and `delete_user` null it afterwards.
+A route check holds the coarse start point only until the destination arrives (`pending_routes`).
 """
 
 from __future__ import annotations
@@ -16,8 +17,11 @@ from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
 
+from pydantic import BaseModel
+
 from src.data.validator import GeoPoint
 from src.engine.community import CommunityReport
+from src.engine.route_check import StationRain
 
 USER_COORD_DECIMALS = 2
 
@@ -66,8 +70,20 @@ _MIGRATIONS = {
         created_at   TEXT NOT NULL
     );
     """,
+    3: """
+    CREATE TABLE pending_routes (
+        line_user_id TEXT PRIMARY KEY,
+        origin_lat   REAL,                    -- NULL until the start point arrives
+        origin_lon   REAL,
+        created_at   TEXT NOT NULL
+    );
+    """,
 }
 SCHEMA_VERSION = max(_MIGRATIONS)
+
+
+class PendingRoute(BaseModel):
+    origin: GeoPoint | None  # None: waiting for the start point
 
 
 def ts(t: datetime) -> str:
@@ -148,6 +164,24 @@ class Database:
         )
         return {r[0]: GeoPoint(lat=r[1], lon=r[2]) for r in rows}
 
+    def latest_rain(self, since: datetime) -> list[StationRain]:
+        """Each station's latest hour, for stations reporting since `since`."""
+        rows = self._query(
+            "SELECT station_id, lat, lon, district_name, observed_at, rain_1h FROM rain_logs r WHERE observed_at = "
+            "(SELECT MAX(observed_at) FROM rain_logs WHERE station_id = r.station_id) AND observed_at >= ?",
+            (ts(since),),
+        )
+        return [
+            StationRain(
+                station_id=r[0],
+                location=GeoPoint(lat=r[1], lon=r[2]),
+                district=r[3],
+                observed_at=parse_ts(r[4]),
+                rain_1h_mm=r[5],
+            )
+            for r in rows
+        ]
+
     def prune_rain(self, older_than: datetime) -> None:
         self._write("DELETE FROM rain_logs WHERE observed_at < ?", [(ts(older_than),)])
 
@@ -179,10 +213,11 @@ class Database:
         )
 
     def delete_user(self, user_id: str) -> None:
-        """Unfollow: drop subscription, cooldowns, pending report; keep past reports but anonymized."""
+        """Unfollow: drop subscription, cooldowns, pending report/route; keep past reports but anonymized."""
         self._write("DELETE FROM users WHERE line_user_id=?", [(user_id,)])
         self.delete_cooldowns(user_id)
         self._write("DELETE FROM pending_reports WHERE line_user_id=?", [(user_id,)])
+        self.clear_pending_route(user_id)
         self._write("UPDATE community_reports SET reporter=NULL WHERE reporter=?", [(user_id,)])
 
     def users(self) -> dict[str, GeoPoint]:
@@ -193,6 +228,8 @@ class Database:
 
     # ---- community reports ----
     def set_pending_report(self, user_id: str, level: str, now: datetime) -> None:
+        """Starting a report cancels a half-done route check, so the next location is unambiguous."""
+        self.clear_pending_route(user_id)
         self._write(
             "INSERT INTO pending_reports VALUES (?,?,?) ON CONFLICT(line_user_id) DO UPDATE SET "
             "level=excluded.level, created_at=excluded.created_at",
@@ -238,9 +275,42 @@ class Database:
         ]
 
     def anonymize_reports(self, older_than: datetime) -> None:
-        """Expired reports stay (for later verification studies) without who sent them."""
+        """Expired reports stay (for later verification studies) without who sent them; stale pending steps go."""
         self._write(
             "UPDATE community_reports SET reporter=NULL WHERE reported_at<? AND reporter IS NOT NULL",
             [(ts(older_than),)],
         )
         self._write("DELETE FROM pending_reports WHERE created_at<?", [(ts(older_than),)])
+        self._write("DELETE FROM pending_routes WHERE created_at<?", [(ts(older_than),)])
+
+    # ---- route checks ----
+    def start_route(self, user_id: str, now: datetime) -> None:
+        """Waiting for the start point; cancels a half-done report."""
+        self._write("DELETE FROM pending_reports WHERE line_user_id=?", [(user_id,)])
+        self._write(
+            "INSERT INTO pending_routes VALUES (?,NULL,NULL,?) ON CONFLICT(line_user_id) DO UPDATE SET "
+            "origin_lat=NULL, origin_lon=NULL, created_at=excluded.created_at",
+            [(user_id, ts(now))],
+        )
+
+    def set_route_origin(self, user_id: str, origin: GeoPoint, now: datetime, decimals: int) -> None:
+        self._write(
+            "UPDATE pending_routes SET origin_lat=?, origin_lon=?, created_at=? WHERE line_user_id=?",
+            [(round(origin.lat, decimals), round(origin.lon, decimals), ts(now), user_id)],
+        )
+
+    def pending_route(self, user_id: str, since: datetime) -> PendingRoute | None:
+        """The route check in progress, if its last step was since `since`; an expired one is dropped."""
+        rows = self._query(
+            "SELECT origin_lat, origin_lon, created_at FROM pending_routes WHERE line_user_id=?", (user_id,)
+        )
+        if not rows:
+            return None
+        if rows[0][2] < ts(since):
+            self.clear_pending_route(user_id)
+            return None
+        lat, lon = rows[0][0], rows[0][1]
+        return PendingRoute(origin=None if lat is None else GeoPoint(lat=lat, lon=lon))
+
+    def clear_pending_route(self, user_id: str) -> None:
+        self._write("DELETE FROM pending_routes WHERE line_user_id=?", [(user_id,)])

@@ -35,7 +35,8 @@ async def request_with_retry(
 ) -> httpx.Response:
     """Send a request, retrying on transport errors and RETRYABLE_STATUS.
 
-    Raises httpx.HTTPStatusError on a final non-2xx response.
+    Raises httpx.HTTPStatusError on a final non-2xx response. Logs only the host: some URLs carry
+    user coordinates in the path (OSRM).
     """
     for attempt in range(max_retries + 1):
         try:
@@ -44,12 +45,12 @@ async def request_with_retry(
             if attempt == max_retries:
                 raise
             delay = backoff_base_s * 2**attempt
-            log.warning("transport error %s on %s, retry in %.1fs", type(exc).__name__, url, delay)
+            log.warning("transport error %s on %s, retry in %.1fs", type(exc).__name__, httpx.URL(url).host, delay)
         else:
             if resp.status_code not in RETRYABLE_STATUS or attempt == max_retries:
                 resp.raise_for_status()
                 return resp
             delay = _retry_after_s(resp) or backoff_base_s * 2**attempt
-            log.warning("HTTP %d on %s, retry in %.1fs", resp.status_code, url, delay)
+            log.warning("HTTP %d on %s, retry in %.1fs", resp.status_code, httpx.URL(url).host, delay)
         await asyncio.sleep(min(delay, max_sleep_s))
     raise AssertionError("unreachable")
