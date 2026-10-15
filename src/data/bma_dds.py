@@ -46,6 +46,7 @@ def parse_rain(payload: list[dict[str, Any]]) -> list[StationRain]:
                 district=r.get("district_name") or None,
                 observed_at=datetime.fromtimestamp(int(m.group(1)) / 1000, UTC),
                 rain_1h_mm=mm,
+                rain_6h_mm=r["rf6hr"] if isinstance(r.get("rf6hr"), int | float) and r["rf6hr"] >= 0 else None,
             )
         )
     return out

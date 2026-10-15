@@ -23,6 +23,7 @@ from pydantic import BaseModel
 from src.data.validator import GeoPoint
 from src.engine.community import CommunityReport
 from src.engine.route_check import StationRain
+from src.engine.verification import VerificationRow
 
 USER_COORD_DECIMALS = 2
 
@@ -90,6 +91,21 @@ _MIGRATIONS = {
     );
     DROP TABLE pending_reports;
     DROP TABLE pending_routes;
+    """,
+    5: """
+    CREATE TABLE verification_log (         -- docs/step5_alert_verification_prereg.md; no personal data
+        observed_at    TEXT NOT NULL,
+        district_name  TEXT NOT NULL,
+        tw_level       TEXT NOT NULL,
+        tw_rain_1h     REAL,
+        tw_rain_6h     REAL,
+        bma_level      TEXT NOT NULL,
+        bma_rain_1h    REAL,
+        bma_rain_6h    REAL,
+        sensors_online INTEGER NOT NULL,
+        max_depth_cm   REAL,
+        PRIMARY KEY (observed_at, district_name)
+    );
     """,
 }
 SCHEMA_VERSION = max(_MIGRATIONS)
@@ -207,6 +223,30 @@ class Database:
 
     def prune_rain(self, older_than: datetime) -> None:
         self._write("DELETE FROM rain_logs WHERE observed_at < ?", [(ts(older_than),)])
+
+    # ---- verification_log (step 5) ----
+    def add_verification(self, rows: list[VerificationRow]) -> None:
+        self._write(
+            "INSERT OR REPLACE INTO verification_log VALUES (?,?,?,?,?,?,?,?,?,?)",
+            [
+                (
+                    ts(r.observed_at),
+                    r.district,
+                    r.tw_level,
+                    r.tw_rain_1h,
+                    r.tw_rain_6h,
+                    r.bma_level,
+                    r.bma_rain_1h,
+                    r.bma_rain_6h,
+                    r.sensors_online,
+                    r.max_depth_cm,
+                )  # fmt: skip
+                for r in rows
+            ],
+        )
+
+    def verification_count(self) -> int:
+        return int(self._query("SELECT COUNT(*) FROM verification_log")[0][0])
 
     # ---- alert_cooldowns ----
     def get_cooldown(self, user_id: str, area: str) -> tuple[datetime, str] | None:

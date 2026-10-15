@@ -32,6 +32,7 @@ class StationRain(BaseModel):
     district: str | None  # None outside Bangkok
     observed_at: datetime
     rain_1h_mm: float = Field(ge=0)
+    rain_6h_mm: float | None = Field(default=None, ge=0)  # BMA reports it; ThaiWater rows leave it None
 
 
 class RoadFlood(BaseModel):

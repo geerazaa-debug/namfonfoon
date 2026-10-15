@@ -32,6 +32,11 @@ class DistrictIndex:
         gj = json.loads((config_dir / "bangkok_districts.geojson").read_text(encoding="utf-8"))
         table = json.loads((config_dir / "district_hotspots.json").read_text(encoding="utf-8"))["districts"]
         self._shapes = [(f["properties"]["th"], prepared.prep(shape(f["geometry"]))) for f in gj["features"]]
+        # One point guaranteed inside each district polygon (step 5 verification evaluates districts there).
+        self.points = {
+            f["properties"]["th"]: GeoPoint(lat=(pt := shape(f["geometry"]).representative_point()).y, lon=pt.x)
+            for f in gj["features"]
+        }
         self.info = {th: DistrictInfo(th=th, **v) for th, v in table.items()}
 
     def locate(self, p: GeoPoint) -> DistrictInfo | None:

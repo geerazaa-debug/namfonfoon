@@ -112,6 +112,13 @@ the traffic), identifying User-Agent with the project mailbox, attribution every
 Permission is requested (`docs/bma_data_request_draft.md`, email to disd.dsd@bangkok.go.th). If BMA says no, remove
 `bma_dds`. Switching **alerts** to these gauges changes the advisory and needs a pre-registration first.
 
+## Step 5: measuring the advisory (pre-registered)
+`docs/step5_alert_verification_prereg.md` (committed before any data): does an alert at **high** or above precede
+≥ 10 cm on a BMA road flood sensor in the same district within 3 h? With `POLLER_ENABLED=1` the app writes one
+`verification_log` row per district per poll (ThaiWater vs BMA-gauge advisory level, sensors online, max depth; no
+personal data, ~4,800 rows/day). First live snapshot: 44 of 50 districts have a road sensor. Pilot until 2027-04-30
+(pipeline checks only), confirmatory 2027-05-01 to 2027-10-31, analysed once; results published either way.
+
 ## River and canal levels ("ระดับน้ำ")
 Type **ระดับน้ำ** / **น้ำขึ้น** (or postback `river=start`): the key Chao Phraya stations north → south (Nonthaburi
 CPY014, Samsen C.12, Krungthep Bridge CPY015, river mouth GLF001), or the 3 nearest a subscriber's home. Each line: % of

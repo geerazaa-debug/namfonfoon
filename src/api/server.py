@@ -55,6 +55,7 @@ from src.engine.route_check import (
     rain_class,
     rain_classes,
 )
+from src.engine.verification import snapshot
 
 log = logging.getLogger(__name__)
 
@@ -128,13 +129,46 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
             cooldown=CooldownTracker(timedelta(minutes=risk_thresholds()["alerts"]["cooldown_min"]), db=db),
         )
         stop = asyncio.Event()
-        task = asyncio.create_task(pipeline.run_forever(settings()["rain_pipeline"]["poll_interval_min"] * 60, stop))
+        interval = settings()["rain_pipeline"]["poll_interval_min"] * 60
+        task = asyncio.create_task(pipeline.run_forever(interval, stop))
+        collector = asyncio.create_task(collect_forever(pipeline.acc, interval, stop))
         try:
             yield
         finally:
             stop.set()
-            await task
+            await asyncio.gather(task, collector)
             pipeline = None
+
+
+async def collect_verification(acc: RainAccumulator, now: datetime) -> int:
+    """One step 5 snapshot: every district, ThaiWater vs BMA advisory level, BMA road sensor depth. Returns rows."""
+    cfg = settings()["rain_pipeline"]
+    index = district_index()
+    rows = snapshot(
+        now,
+        index.points,
+        RuleBasedAnalyzer(now=lambda: now),
+        acc.near,
+        [s for s in await bma_rain_cache.get(now) or [] if s.observed_at <= now],
+        await road_floods(now),
+        index.locate,
+        radius_km=cfg["station_radius_km"],
+        fallback_km=cfg["fallback_radius_km"],
+    )
+    get_db().add_verification(rows)
+    return len(rows)
+
+
+async def collect_forever(acc: RainAccumulator, interval_s: float, stop: asyncio.Event) -> None:
+    while not stop.is_set():
+        try:
+            await collect_verification(acc, datetime.now(UTC))
+        except Exception as exc:  # never let the collector take the app down
+            log.error("verification snapshot failed: %s", type(exc).__name__)
+        try:
+            await asyncio.wait_for(stop.wait(), timeout=interval_s)
+        except TimeoutError:
+            pass
 
 
 app = FastAPI(title="น้ำ ฝน ฝุ่น (Nam Fon Foon) API", version="0.7.0", lifespan=lifespan)
