@@ -1,6 +1,6 @@
-# FloodWatch: Bangkok Heavy-Rain Advisory
+# น้ำ ฝน ฝุ่น (Nam Fon Foon): Bangkok rain, flood and PM2.5 info over LINE
 
-Rule-based heavy-rain alerts per Bangkok district, combined with official BMA road-flood hotspot statistics, pushed over LINE and exposed as a B2B API.
+A free public-good LINE OA + web map: rule-based heavy-rain alerts per Bangkok district (with BMA road-flood hotspot statistics), citizen water reports, route checks, and PM2.5. No ads, no data sales. The code and repo keep the working name FloodWatch; users see น้ำ ฝน ฝุ่น.
 
 > **Status: v0.2 rule-based advisory.** This is not a flood forecast. A pre-registered backtest (2022–24 train, 2025 test) found no multi-factor model that beats rain-only. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the evidence chain and the rules.
 
@@ -34,6 +34,7 @@ cp .env.example .env   # fill in values
 | GET | `/v1/public/reports` | — | Live citizen water reports (no reporter identity) |
 | GET | `/v1/public/rain` | — | Last hour's rain at wet ThaiWater gauges (empty unless the poller runs) |
 | GET | `/v1/public/air` | — | Latest PM2.5 at every fresh Air4Thai station (nationwide) |
+| GET | `/privacy` | — | Privacy policy and disclaimers (Thai) |
 | GET | `/map` | — | Public map of citizen reports + gauge rain; `#from=lat,lon&to=lat,lon` draws a checked route (Thai, large type, mobile-first, installable PWA, works offline) |
 | GET | `/report` | LIFF login | Report page that opens inside LINE (big buttons + map pin) |
 | POST | `/v1/reports` | LINE ID token (`Authorization: Bearer`) | Submit a report from the LIFF page |
@@ -64,7 +65,7 @@ type **รายงานน้ำ** (or a rich-menu postback `report=start`) �
 - Coordinates are rounded to ~110 m. The reporter's userId is kept only while the report is live (rate limit 4/h, distinct-reporter count), then nulled; unfollow nulls it at once.
 - A location shared *without* a picked level is still the home-area alert subscription.
 - These are unverified public observations, not measurements; every reply and the map say so. Using them to measure the rain advisory's false-alarm rate needs a pre-registration first.
-- Settings: `community_reports` in `config/settings.yaml` (set `public_map_url` to put the map link in replies).
+- Settings: `community_reports` in `config/settings.yaml`. Links in replies use env `PUBLIC_BASE_URL`.
 
 **LIFF report page** (`/report`): same flow with large buttons and a draggable map pin, inside LINE, no install.
 Setup: create a LINE Login channel **under the same provider** as the Messaging API channel (otherwise its userIds differ
@@ -113,6 +114,24 @@ Route checks add the worst PM2.5 station within 2 km of the route. `/map` shows 
   Let's Encrypt's new Root YR. `config/ca/letsencrypt_yr.pem` ships the public YR1 intermediate + Root YR cross-signed by
   ISRG Root X1 (valid to 2028/2032), loaded on top of certifi. Never `verify=False`.
 - Licence: not stated. Attribute PCD, public non-commercial use only. Nationwide on purpose (Chiang Mai haze season).
+
+## Welcome, help and the user's own data
+- **follow** → a welcome reply with four buttons (report / route / PM2.5 / home alerts), the privacy link and the
+  emergency numbers 1784 / 1555. Turn **off** the LINE OA Manager greeting message, or users get two.
+- **วิธีใช้** (or postback `help=start`) → the same help. **🏠 เตือนแถวบ้าน** (`home=start`) → a location button; that
+  share becomes the home location, now confirmed with a reply.
+- **ข้อมูลของฉัน** → what is stored (home district, linked live reports, alert history, pending step), never the
+  coordinates. **ลบข้อมูลของฉัน** → confirm button → same as unfollow: subscription, cooldowns and pending step deleted,
+  reports unlinked (they leave the map). PDPA access and erasure without contacting anyone.
+- `/privacy` lists every stored field with its retention, what OSRM / OSM / Google Fonts / cdnjs / LINE receive, the
+  14-day backup window, rights, disclaimers and sources. `project.contact_email` in `config/settings.yaml` adds a
+  mailbox to it (empty: LINE chat only). It is not legal advice: have it reviewed before a public launch.
+
+## Rich menu
+Six big buttons (`deploy/richmenu/richmenu.png`, 2500×1686, rendered from `richmenu.html` with headless Chrome):
+รายงานน้ำ · เช็คเส้นทาง · ฝุ่น PM2.5 · แผนที่ · เตือนแถวบ้าน · วิธีใช้. Install once with
+`LINE_CHANNEL_ACCESS_TOKEN=... PUBLIC_BASE_URL=https://<domain> python -m src.alerts.rich_menu` (creates, uploads,
+sets it as everyone's default). The menu opens by default so older users find it.
 
 ## Deploy
 Free always-on hosting on Oracle Cloud: see [`docs/DEPLOY.md`](docs/DEPLOY.md) and `deploy/`.

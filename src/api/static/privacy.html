@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1565c0">
+<title>ความเป็นส่วนตัว · น้ำ ฝน ฝุ่น</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#555; --card:#f4f6f8; --line:#d0d5da; --accent:#1565c0; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#121417; --fg:#f1f3f5; --muted:#b0b6bc; --card:#1e2227; --line:#3a4048; --accent:#64b5f6; }
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--fg); font-family:"Sarabun", system-ui, sans-serif;
+    font-size:19px; line-height:1.6; }
+  main { max-width:720px; margin:0 auto; padding:16px 16px 48px; }
+  h1 { font-size:1.6rem; margin:8px 0 4px; }
+  h2 { font-size:1.2rem; margin:28px 0 8px; color:var(--accent); }
+  .sub { color:var(--muted); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 16px; margin:12px 0; }
+  table { width:100%; border-collapse:collapse; font-size:.95rem; }
+  th, td { text-align:left; vertical-align:top; padding:8px; border-bottom:1px solid var(--line); }
+  th { color:var(--muted); font-weight:700; }
+  a { color:var(--accent); }
+  code { background:var(--card); padding:1px 6px; border-radius:6px; }
+  main { overflow-wrap:anywhere; }
+  @media (max-width: 640px) {
+    table, tbody, tr, td { display:block; }
+    tr:first-child { display:none; }
+    tr { border:1px solid var(--line); border-radius:12px; margin:10px 0; padding:6px 12px; }
+    td { border:none; padding:4px 0; }
+    td::before { content:attr(data-h); display:block; color:var(--muted); font-size:.85rem; font-weight:700; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>🔒 ความเป็นส่วนตัวและข้อควรรู้</h1>
+  <div class="sub"><span id="name">น้ำ ฝน ฝุ่น</span> · ปรับปรุงล่าสุด <span id="updated">-</span></div>
+
+  <div class="card">
+    <b>สรุปสั้นๆ</b> บริการนี้ฟรี ไม่มีโฆษณา ไม่ขายข้อมูล เก็บเท่าที่จำเป็นต้องใช้ และปัดตำแหน่งให้หยาบเสมอ
+    คุณดูและลบข้อมูลของตัวเองได้ทุกเมื่อในแชท LINE: พิมพ์ <code>ข้อมูลของฉัน</code> หรือ <code>ลบข้อมูลของฉัน</code>
+  </div>
+
+  <h2>ผู้ให้บริการ</h2>
+  <p>โครงการ <b>น้ำ ฝน ฝุ่น</b> เป็นโครงการส่วนบุคคลเพื่อประโยชน์สาธารณะ ให้ข้อมูลฝน น้ำท่วม และฝุ่น PM2.5 ผ่าน LINE และแผนที่บนเว็บ</p>
+
+  <h2>ข้อมูลที่เราเก็บ</h2>
+  <table>
+    <tr><th>ข้อมูล</th><th>ใช้ทำอะไร</th><th>เก็บนานแค่ไหน</th></tr>
+    <tr><td data-h="ข้อมูล">รหัสผู้ใช้ LINE (ไม่ใช่ชื่อ)</td><td data-h="ใช้ทำอะไร">ตอบกลับคุณ ส่งคำเตือน กันการรายงานถี่เกินไป</td><td data-h="เก็บนานแค่ไหน">จนกว่าคุณลบข้อมูลหรือบล็อกบัญชี</td></tr>
+    <tr><td data-h="ข้อมูล">ตำแหน่งบ้าน ปัดให้หยาบราว 1 กม. และชื่อเขต (เมื่อคุณแชร์เพื่อรับเตือน)</td><td data-h="ใช้ทำอะไร">เลือกสถานีวัดฝนใกล้บ้าน</td><td data-h="เก็บนานแค่ไหน">จนกว่าคุณแชร์ใหม่ ลบข้อมูล หรือบล็อกบัญชี</td></tr>
+    <tr><td data-h="ข้อมูล">รายงานน้ำ: ระดับน้ำ ตำแหน่งปัดราว 100 ม. เขต และเวลา</td><td data-h="ใช้ทำอะไร">แสดงบนแผนที่สาธารณะโดย<b>ไม่แสดงตัวตน</b></td><td data-h="เก็บนานแค่ไหน">ผูกกับรหัสของคุณไม่เกิน 3 ชม. หลังจากนั้นเก็บแบบไม่ระบุตัวตน เพื่อศึกษาว่าคำเตือนแม่นแค่ไหน</td></tr>
+    <tr><td data-h="ข้อมูล">จุดเริ่มต้นเส้นทาง ปัดราว 100 ม.</td><td data-h="ใช้ทำอะไร">รอให้คุณส่งปลายทาง</td><td data-h="เก็บนานแค่ไหน">ไม่เกิน 10 นาที แล้วลบทิ้ง</td></tr>
+    <tr><td data-h="ข้อมูล">ประวัติการเตือนล่าสุด (เขต และระดับ)</td><td data-h="ใช้ทำอะไร">ไม่ส่งคำเตือนเดิมซ้ำ</td><td data-h="เก็บนานแค่ไหน">จนกว่าคุณลบข้อมูลหรือบล็อกบัญชี</td></tr>
+  </table>
+  <p>เรา<b>ไม่เก็บ</b> ชื่อ รูปโปรไฟล์ เบอร์โทร หรือประวัติการเดินทางของคุณ และไม่บันทึกรหัสผู้ใช้หรือพิกัดลงใน log ของระบบ
+    ฐานข้อมูลสำรองรายวันเก็บไว้ 14 วัน ข้อมูลที่ลบแล้วจึงหายจากข้อมูลสำรองทั้งหมดภายใน 14 วัน</p>
+
+  <h2>ข้อมูลที่ส่งต่อให้ผู้อื่น</h2>
+  <ul>
+    <li><b>LINE</b> ข้อความทั้งหมดผ่านแพลตฟอร์ม LINE ตามนโยบายของ LINE</li>
+    <li><b>บริการหาเส้นทาง OSRM</b> (router.project-osrm.org) เมื่อคุณเช็คเส้นทาง เราส่งพิกัดจุดเริ่มต้นและปลายทางที่ปัดราว 100 ม. โดยไม่ส่งตัวตนของคุณ
+      ส่วนเมื่อเปิดลิงก์แผนที่เส้นทาง เบราว์เซอร์ของคุณจะขอเส้นทางจาก OSRM เอง และพิกัดอยู่ในลิงก์หลังเครื่องหมาย # ซึ่งไม่ถูกส่งมาที่เซิร์ฟเวอร์ของเรา</li>
+    <li><b>หน้าแผนที่</b> โหลดภาพแผนที่จาก OpenStreetMap ฟอนต์จาก Google Fonts และโค้ดแผนที่จาก cdnjs บริการเหล่านี้เห็นที่อยู่ IP ของเครื่องคุณ เหมือนเว็บทั่วไป</li>
+    <li><b>หน้ารายงานใน LINE (LIFF)</b> ตรวจสอบการเข้าสู่ระบบกับ LINE เพื่อรู้ว่าเป็นผู้ใช้คนเดียวกับในแชท</li>
+  </ul>
+  <p>เราไม่ขาย ไม่ให้เช่า และไม่แบ่งปันข้อมูลส่วนบุคคลของคุณกับใคร</p>
+
+  <h2>สิทธิ์ของคุณ</h2>
+  <ul>
+    <li><b>ดูข้อมูล:</b> พิมพ์ <code>ข้อมูลของฉัน</code> ในแชท</li>
+    <li><b>ลบข้อมูล:</b> พิมพ์ <code>ลบข้อมูลของฉัน</code> แล้วกดยืนยัน หรือบล็อกบัญชี LINE ก็ลบให้อัตโนมัติ</li>
+    <li><b>แก้ไขตำแหน่งบ้าน:</b> แชร์ตำแหน่งใหม่ได้ทุกเมื่อ</li>
+    <li><b>สอบถามหรือร้องเรียน:</b> <span id="contact">ส่งข้อความในแชท LINE ของโครงการ</span></li>
+  </ul>
+
+  <h2>ข้อควรรู้ก่อนใช้</h2>
+  <ul>
+    <li>ข้อมูลฝนและฝุ่นเป็น<b>ค่าที่สถานีวัดได้จริง</b> ไม่ใช่การพยากรณ์ อาจล่าช้า สถานีอาจอยู่ห่างจากคุณ และอาจคลาดเคลื่อนได้</li>
+    <li>คำเตือนฝนคำนวณจากปริมาณฝนตามเกณฑ์ ยังไม่ได้วัดว่าเตือนผิดบ่อยแค่ไหน ใช้ประกอบการตัดสินใจ ไม่ใช่คำยืนยันว่าน้ำจะท่วมหรือไม่ท่วม</li>
+    <li>รายงานน้ำมาจากประชาชน ยังไม่ได้ตรวจสอบโดยหน่วยงาน</li>
+    <li>นี่<b>ไม่ใช่ประกาศทางการ</b> เหตุฉุกเฉินโทร <b>1784</b> (ปภ.) <b>1555</b> (กทม.) หรือ <b>1669</b> (เจ็บป่วยฉุกเฉิน) และติดตามประกาศของหน่วยงานเสมอ</li>
+  </ul>
+
+  <h2>แหล่งข้อมูล</h2>
+  <ul>
+    <li>ฝนและระดับน้ำ: คลังข้อมูลน้ำแห่งชาติ (ThaiWater) สถาบันสารสนเทศทรัพยากรน้ำ</li>
+    <li>ฝุ่น PM2.5: กรมควบคุมมลพิษ (Air4Thai) ซึ่งรวมสถานีของกรุงเทพมหานคร</li>
+    <li>สถิติจุดน้ำท่วม: สำนักการระบายน้ำ กรุงเทพมหานคร (CC BY) · ขอบเขตเขต: geoBoundaries (CC BY)</li>
+    <li>แผนที่ © OpenStreetMap contributors (ODbL) · เส้นทาง: OSRM</li>
+  </ul>
+</main>
+<script>
+fetch("/v1/public/app-config").then((r) => r.json()).then((cfg) => {
+  document.getElementById("name").textContent = cfg.name;
+  document.getElementById("updated").textContent = cfg.privacy_updated;
+  if (cfg.contact_email) {
+    const c = document.getElementById("contact");
+    const a = document.createElement("a");
+    a.href = "mailto:" + cfg.contact_email; a.textContent = cfg.contact_email;
+    c.replaceChildren("อีเมล ", a, " หรือส่งข้อความในแชท LINE ของโครงการ");
+  }
+}).catch(() => {});
+</script>
+</body>
+</html>

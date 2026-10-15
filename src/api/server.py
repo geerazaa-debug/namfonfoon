@@ -24,6 +24,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, ValidationError
 
 from src.alerts import air_messages as am
+from src.alerts import help_messages as hm
 from src.alerts import report_messages as rm
 from src.alerts import route_messages as rtm
 from src.alerts.dispatcher import AlertPipeline, CooldownTracker, default_fetch
@@ -60,6 +61,12 @@ def get_db() -> Database:
         path = os.environ.get("FLOODWATCH_DB") or str(ROOT / settings()["storage"]["db_path"])
         _db = Database(path)
     return _db
+
+
+def public_url(path: str) -> str:
+    """Absolute link for LINE replies; "" when PUBLIC_BASE_URL is unset (dev), so replies carry no link."""
+    base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+    return base + path if base else ""
 
 
 def district_name(p: GeoPoint) -> str | None:
@@ -99,7 +106,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
             pipeline = None
 
 
-app = FastAPI(title="FloodWatch Rain Advisory", version="0.5.0", lifespan=lifespan)
+app = FastAPI(title="น้ำ ฝน ฝุ่น (Nam Fon Foon) API", version="0.6.0", lifespan=lifespan)
 
 
 def require_api_key(x_api_key: str = Header(default="")) -> None:
@@ -273,6 +280,9 @@ async def public_air() -> PublicAirView:
 
 
 class AppConfig(BaseModel):
+    name: str
+    contact_email: str | None  # /privacy shows it when set
+    privacy_updated: str
     liff_id: str | None
     report_url: str | None  # opens the LIFF report page inside LINE
     osrm_url: str  # /map draws a checked route itself, so route points never reach this server
@@ -281,7 +291,11 @@ class AppConfig(BaseModel):
 @app.get("/v1/public/app-config")
 def app_config() -> AppConfig:
     liff_id = os.environ.get("LIFF_ID") or None
+    project = settings()["project"]
     return AppConfig(
+        name=project["name"],
+        contact_email=project["contact_email"] or None,
+        privacy_updated=project["privacy_updated"],
         liff_id=liff_id,
         report_url=f"https://liff.line.me/{liff_id}" if liff_id else None,
         osrm_url=settings()["route_check"]["osrm_url"],
@@ -321,6 +335,11 @@ def _static(name: str, media_type: str) -> FileResponse:
 @app.get("/map", include_in_schema=False)
 def report_map() -> FileResponse:
     return _static("map.html", "text/html; charset=utf-8")
+
+
+@app.get("/privacy", include_in_schema=False)
+def privacy_page() -> FileResponse:
+    return _static("privacy.html", "text/html; charset=utf-8")
 
 
 @app.get("/report", include_in_schema=False)
@@ -397,6 +416,8 @@ async def route_step(user_id: str, loc: GeoPoint, now: datetime) -> list[dict[st
         db.set_route_origin(user_id, loc, now, cfg["coord_decimals"])
         return [rtm.ask_destination()]
     db.clear_pending_route(user_id)
+    d = cfg["coord_decimals"]  # OSRM sees both ends as coarsely as the stored start point
+    loc = GeoPoint(lat=round(loc.lat, d), lon=round(loc.lon, d))
     route, check, straight = await run_route_check(pending.origin, loc, now)
     air_cfg = settings()["air_quality"]
     air = air_on_route(
@@ -407,7 +428,7 @@ async def route_step(user_id: str, loc: GeoPoint, now: datetime) -> list[dict[st
         max_age=timedelta(minutes=air_cfg["max_age_min"]),
     )
     air_line = am.route_line(air, air_bands()[air.worst.band]) if air else None
-    map_url = settings()["community_reports"]["public_map_url"]
+    map_url = public_url("/map")
     return [rtm.result(check, straight_line=straight, map_url=map_url, a=pending.origin, b=loc, air_line=air_line)]
 
 
@@ -428,6 +449,7 @@ async def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]
     cfg = settings()["community_reports"]
     route_cfg = settings()["route_check"]
     air_cfg = settings()["air_quality"]
+    project = settings()["project"]
     levels = report_levels()
     user_id = ev.get("source", {}).get("userId")
     if not user_id:
@@ -437,10 +459,27 @@ async def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]
     if kind == "unfollow":
         db.delete_user(user_id)  # also cooldowns + pending step; anonymizes past reports
         return []
+    if kind == "follow":  # replaces the console greeting message: turn that off
+        return [hm.welcome(project["name"], public_url("/privacy"))]
     text = msg.get("text", "").strip() if kind == "message" and msg.get("type") == "text" else None
+    data = ev.get("postback", {}).get("data", "") if kind == "postback" else None
+    if text in project["help_texts"] or data == hm.POSTBACK_HELP:
+        return [hm.help_reply(project["name"], public_url("/privacy"))]
+    if text in project["my_data_texts"]:
+        return [hm.my_data(db.user_data(user_id, now - timedelta(hours=cfg["ttl_hours"])))]
+    if text in project["delete_texts"]:
+        return [hm.confirm_delete()]
+    if data == hm.POSTBACK_DELETE:
+        db.delete_user(user_id)
+        log.info("user deleted their data")  # never log userId
+        return [hm.deleted()]
+    if data == hm.POSTBACK_CANCEL:
+        return [hm.cancelled()]
+    if data == hm.POSTBACK_HOME:
+        db.clear_step(user_id)  # so the next shared location is the home location
+        return [hm.ask_home()]
     if text in cfg["trigger_texts"]:
         return [rm.ask_level(levels)]
-    data = ev.get("postback", {}).get("data", "") if kind == "postback" else None
     if text in route_cfg["trigger_texts"] or data == rtm.POSTBACK_START:
         db.anonymize_reports(now - timedelta(hours=cfg["ttl_hours"]))  # also drops stale pending steps
         db.start_route(user_id, now)
@@ -467,15 +506,16 @@ async def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]
             db.start_air(user_id, now)
             return await air_reply(loc, now, at_home=False)
         if level is None:  # plain location share = alert subscription (home area)
-            db.upsert_user(user_id, loc, district_name(loc), now)
+            district = district_name(loc)
+            db.upsert_user(user_id, loc, district, now)
             log.info("registered location for subscriber")  # never log userId/coords
-            return []
+            return [hm.home_saved(district)]
         outcome = submit_report(user_id, level, loc, now)
         if outcome.status == "outside_bangkok":
             return [rm.outside_bangkok()]
         if outcome.status == "rate_limited":
             return [rm.too_many(cfg["max_reports_per_hour"])]
-        return [rm.thanks(levels[level], outcome.district or "", cfg["public_map_url"])]
+        return [rm.thanks(levels[level], outcome.district or "", public_url("/map"))]
     return []
 
 

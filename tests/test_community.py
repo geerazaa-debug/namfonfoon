@@ -9,6 +9,7 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
+from src.alerts import help_messages as hm
 from src.alerts import report_messages as rm
 from src.alerts.line_notifier import LineNotifier
 from src.api import server
@@ -151,8 +152,8 @@ def test_webhook_report_flow_end_to_end(line, memory_db):
     assert "reporter" not in r and "U7" not in json.dumps(data)
     assert [lv["key"] for lv in data["levels"]] == ["clear", "ankle", "knee", "waist"]
 
-    assert send(_loc(spot)) == []  # no pending level -> plain share subscribes
-    assert memory_db.user_count() == 1
+    [saved] = send(_loc(spot))  # no pending level -> plain share subscribes
+    assert saved == hm.home_saved(normal) and memory_db.user_count() == 1
 
 
 def test_webhook_skips_redelivered_events(line, memory_db):

@@ -1,0 +1,30 @@
+<!doctype html>
+<!-- Source of richmenu.png (2500x1686, LINE "large" rich menu). Re-render after editing:
+     chrome --headless=new --hide-scrollbars --window-size=2500,1686 --virtual-time-budget=8000
+            --screenshot=richmenu.png richmenu.html
+     Cell order and actions must match src/alerts/rich_menu.py BUTTONS. -->
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@700;800&display=block" rel="stylesheet">
+<style>
+  html, body { margin:0; width:2500px; height:1686px; overflow:hidden; background:#0b1a2a; }
+  .grid { display:grid; grid-template-columns:833px 834px 833px; grid-template-rows:843px 843px; width:2500px; height:1686px; }
+  .cell { display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff;
+    font-family:"Sarabun", sans-serif; border:6px solid #0b1a2a; box-sizing:border-box; border-radius:48px; }
+  .e { font-size:250px; line-height:1.1; font-family:"Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+  .t { font-size:128px; font-weight:800; line-height:1.25; margin-top:10px; }
+  .s { font-size:66px; font-weight:700; opacity:.92; line-height:1.3; }
+</style>
+</head>
+<body>
+<div class="grid">
+  <div class="cell" style="background:#1565c0"><div class="e">🌊</div><div class="t">รายงานน้ำ</div><div class="s">น้ำท่วมถึงไหน</div></div>
+  <div class="cell" style="background:#6a1b9a"><div class="e">🚗</div><div class="t">เช็คเส้นทาง</div><div class="s">ฝน น้ำ ฝุ่น ตลอดทาง</div></div>
+  <div class="cell" style="background:#c43e00"><div class="e">😷</div><div class="t">ฝุ่น PM2.5</div><div class="s">ค่าฝุ่นใกล้ตัว</div></div>
+  <div class="cell" style="background:#2e7d32"><div class="e">🗺️</div><div class="t">แผนที่</div><div class="s">ดูภาพรวมทั้งเมือง</div></div>
+  <div class="cell" style="background:#00695c"><div class="e">🏠</div><div class="t">เตือนแถวบ้าน</div><div class="s">ฝนตกหนักแถวบ้าน</div></div>
+  <div class="cell" style="background:#455a64"><div class="e">ℹ️</div><div class="t">วิธีใช้</div><div class="s">และข้อมูลของฉัน</div></div>
+</div>
+</body>
+</html>

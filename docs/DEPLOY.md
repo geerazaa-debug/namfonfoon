@@ -26,9 +26,13 @@ the database in `/var/lib/floodwatch` and the env file are kept. Previous releas
 ## LINE console
 - Messaging API channel → Webhook URL `https://<domain>/webhook/line`, enable "Use webhook", **leave webhook
   redelivery off** (redelivered events are skipped anyway).
-- Rich menu buttons: action *Text* "รายงานน้ำ", or *Postback* `report=start`; or a URI button to `https://liff.line.me/<LIFF_ID>`. Route check: *Text* "เช็คเส้นทาง" or *Postback* `route=start`. PM2.5: *Text* "ฝุ่น" or *Postback* `air=start`.
+- Rich menu: on the server, `cd /opt/floodwatch && sudo -u floodwatch bash -c 'set -a; . /etc/floodwatch.env; .venv/bin/python -m src.alerts.rich_menu'` (installs the 6-button menu as the default).
+- LINE OA Manager → Response settings: turn **off** the greeting message (the bot sends its own welcome) and
+  check whether manual chat can stay on alongside the webhook, so non-command messages reach you.
+- OA profile / LIFF app: privacy policy URL `https://<domain>/privacy`.
 - LIFF: see README "Citizen water reports". Endpoint `https://<domain>/report`.
-- Set `community_reports.public_map_url: https://<domain>/map` in `config/settings.yaml`, commit, push again.
+- Reply links use `PUBLIC_BASE_URL`, which setup.sh writes into `/etc/floodwatch.env` from the deploy domain.
+- Once the project mailbox exists, set `project.contact_email` in `config/settings.yaml` and push again.
 
 ## Operate
 - Logs: `journalctl -u floodwatch -f` (no userIds or coordinates are logged).

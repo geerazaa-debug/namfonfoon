@@ -29,6 +29,8 @@ if [ ! -f /etc/floodwatch.env ]; then
   install -o root -g floodwatch -m 640 "$HERE/floodwatch.env.example" /etc/floodwatch.env
   echo ">>> Fill in /etc/floodwatch.env, then: sudo systemctl restart floodwatch"
 fi
+# Links in LINE replies (/map, /privacy) point here.
+grep -q '^PUBLIC_BASE_URL=' /etc/floodwatch.env || echo "PUBLIC_BASE_URL=https://$DOMAIN" >> /etc/floodwatch.env
 
 install -m 644 "$HERE/floodwatch.service" /etc/systemd/system/floodwatch.service
 sed "s/__DOMAIN__/$DOMAIN/" "$HERE/Caddyfile" > /etc/caddy/Caddyfile
@@ -50,3 +52,4 @@ systemctl restart floodwatch caddy
 sleep 3
 curl -fsS http://127.0.0.1:8000/health && echo " <- app OK"
 echo "Map: https://$DOMAIN/map   Webhook: https://$DOMAIN/webhook/line   LIFF endpoint: https://$DOMAIN/report"
+echo "Privacy policy: https://$DOMAIN/privacy"

@@ -1,4 +1,4 @@
-# FloodWatch — Project Rules
+# FloodWatch (user-facing name: น้ำ ฝน ฝุ่น) — Project Rules
 
 Rule-based heavy-rain advisory for Bangkok districts (rain thresholds + BMA DDS flood-hotspot stats) with LINE alerts and a B2B API. Read `docs/ARCHITECTURE.md` first.
 
@@ -36,7 +36,9 @@ Rule-based heavy-rain advisory for Bangkok districts (rain thresholds + BMA DDS 
 - `src/engine/community.py` + `src/alerts/report_messages.py` + `src/alerts/line_login.py`: citizen water-report flow (chat + LIFF), map view
 - `src/engine/route_check.py` + `src/data/osrm.py` + `src/alerts/route_messages.py`: route check (gauge rain + reports along a driving route); route points are never logged or sent to `/map`'s server
 - `src/data/air4thai.py` + `src/engine/air.py` + `src/alerts/air_messages.py`: PM2.5 lookup (nationwide); `config/ca/` fixes Air4Thai's broken TLS chain
-- `src/api/static/`: `/map` (PWA), `/report` (LIFF), manifest, service worker, icons
+- `src/alerts/help_messages.py`: welcome/help, home signup, PDPA self-service (ข้อมูลของฉัน / ลบข้อมูลของฉัน); `src/alerts/rich_menu.py` + `deploy/richmenu/`: rich menu
+- `src/api/static/`: `/map` (PWA), `/report` (LIFF), `/privacy`, manifest, service worker, icons
+- `/privacy` must stay true: when you change what is stored, sent to third parties or kept, update it too
 
 ## Agents
 - `.claude/agents/scout.md` — read-only codebase / API-schema exploration

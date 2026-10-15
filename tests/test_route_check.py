@@ -191,7 +191,7 @@ def fake_osrm(monkeypatch):
 
 def test_webhook_route_flow_end_to_end(line, memory_db, fake_osrm, monkeypatch):  # noqa: F811
     client, send = line
-    monkeypatch.setitem(settings()["community_reports"], "public_map_url", "https://fw.test/map")
+    monkeypatch.setenv("PUBLIC_BASE_URL", "https://fw.test/")
     hot, normal = hotspot_and_normal()
     a, b = inside(normal), inside(hot)
     now = datetime.now(UTC)
@@ -207,10 +207,11 @@ def test_webhook_route_flow_end_to_end(line, memory_db, fake_osrm, monkeypatch):
     assert "⚠️" in text and f"เขต{normal}" in text and "ฝนหนัก 12 มม." in text and "ถึงเข่า" in text
     assert "ไม่ใช่การพยากรณ์" in text and "https://fw.test/map#from=" in text and len(text) < 5000
     assert res["quickReply"]["items"][0]["action"]["data"] == rtm.POSTBACK_START
-    assert fake_osrm[0][0] == GeoPoint(lat=round(a.lat, 3), lon=round(a.lon, 3))  # start held coarse
+    coarse = [GeoPoint(lat=round(p.lat, 3), lon=round(p.lon, 3)) for p in (a, b)]
+    assert list(fake_osrm[0]) == coarse  # OSRM sees both ends at ~110 m
     assert memory_db.user_count() == 0  # route points are not a home subscription
 
-    assert send(_loc(a)) == [] and memory_db.user_count() == 1  # flow over -> plain share subscribes
+    assert "บันทึกแล้ว" in send(_loc(a))[0]["text"] and memory_db.user_count() == 1  # flow over -> subscribes
 
 
 def test_webhook_route_falls_back_to_straight_line_and_rejects_far_points(line, memory_db, monkeypatch):  # noqa: F811

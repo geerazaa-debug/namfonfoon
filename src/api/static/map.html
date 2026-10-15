@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1565c0">
-<title>น้ำถึงไหนแล้ว?</title>
+<title>น้ำ ฝน ฝุ่น</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
-<meta name="apple-mobile-web-app-title" content="น้ำถึงไหน">
+<meta name="apple-mobile-web-app-title" content="น้ำ ฝน ฝุ่น">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
@@ -33,6 +33,7 @@
   .how { padding:10px 16px; font-size:1rem; }
   .how b { color:var(--accent); }
   .note { color:var(--muted); font-size:.85rem; padding:0 16px 12px; }
+  .note a { color:var(--accent); }
   .pin { display:flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%;
     background:#fff; border:5px solid; font-size:22px; box-shadow:0 2px 6px rgba(0,0,0,.35); }
   .pin.unconfirmed { border-style:dashed; opacity:.8; }
@@ -52,7 +53,7 @@
 </head>
 <body>
 <header>
-  <h1>🌊 น้ำถึงไหนแล้ว?</h1>
+  <h1>🌊 น้ำ ฝน ฝุ่น</h1>
   <div class="sub">น้ำท่วมจากคนในพื้นที่ ฝน และฝุ่น PM2.5 จากสถานีวัด กรุงเทพฯ · อัปเดต <span id="updated">-</span></div>
 </header>
 <div class="offline" id="offline" hidden>📴 ออฟไลน์อยู่ กำลังแสดงข้อมูลล่าสุดที่โหลดไว้</div>
@@ -69,13 +70,13 @@
   <button id="report" class="primary" type="button" hidden>🌊 รายงานน้ำ</button>
   <button id="install" type="button" hidden>📲 เพิ่มลงหน้าจอ</button>
 </div>
-<div class="how">อยากช่วยรายงาน? แอดไลน์ FloodWatch แล้วพิมพ์ <b>รายงานน้ำ</b> กดเลือก 2 ครั้งก็เสร็จ ·
+<div class="how">อยากช่วยรายงาน? แอดไลน์ <b>น้ำ ฝน ฝุ่น</b> แล้วพิมพ์ <b>รายงานน้ำ</b> กดเลือก 2 ครั้งก็เสร็จ ·
   จะออกเดินทาง? พิมพ์ <b>เช็คเส้นทาง</b> ดูฝน น้ำ และฝุ่นตลอดทาง · พิมพ์ <b>ฝุ่น</b> ดูค่า PM2.5 ใกล้ตัว</div>
 <div class="how" id="iosHint" hidden>📲 ใช้บ่อย? กดปุ่ม <b>แชร์</b> ของ Safari แล้วเลือก <b>เพิ่มไปยังหน้าจอโฮม</b></div>
 <div class="note">ข้อมูลเป็นรายงานจากประชาชน ยังไม่ได้ตรวจสอบโดยหน่วยงาน · ขอบเส้นประ = มีผู้รายงานคนเดียว ·
   รายงานหายไปเองหลัง <span id="ttl">3</span> ชม. · วงกลมสีฟ้า = ฝนที่วัดได้ในชั่วโมงล่าสุด (ThaiWater) ·
   ตัวเลขในวงกลมสี = ฝุ่น PM2.5 (มคก./ลบ.ม.) จากกรมควบคุมมลพิษ (Air4Thai) รวมสถานีของ กทม. ·
-  เส้นทางจาก OSRM · แผนที่ © OpenStreetMap contributors</div>
+  เส้นทางจาก OSRM · แผนที่ © OpenStreetMap contributors · <a href="/privacy">ความเป็นส่วนตัวและข้อควรรู้</a></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>

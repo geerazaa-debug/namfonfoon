@@ -13,6 +13,16 @@ local_sensors:
   timeout_s: 10
   max_retries: 3
 
+# User-facing identity. The public base URL (https://<domain>) comes from env PUBLIC_BASE_URL, which
+# deploy/setup.sh writes from the deploy domain; without it replies carry no links.
+project:
+  name: "น้ำ ฝน ฝุ่น"
+  contact_email: ""            # project mailbox shown on /privacy; empty -> LINE chat only
+  privacy_updated: "2026-10-16"
+  help_texts: ["วิธีใช้", "ช่วยเหลือ", "เมนู", "help", "สวัสดี"]
+  my_data_texts: ["ข้อมูลของฉัน"]
+  delete_texts: ["ลบข้อมูลของฉัน", "ลบข้อมูล"]
+
 # Area of interest: Greater Bangkok (lat/lon WGS84)
 area_of_interest:
   name: Greater Bangkok
@@ -59,7 +69,6 @@ community_reports:
   confirm_radius_m: 300       # other reporters within this distance can confirm a report
   confirm_min_reporters: 2    # distinct reporters (incl. the first) for "confirmed"
   max_reports_per_hour: 4     # per LINE user
-  public_map_url: ""          # e.g. https://<host>/map; empty -> no link in replies
   levels:                     # rank 0 = water gone; quick-reply labels must stay <= 20 chars
     - {key: clear, rank: 0, emoji: "✅", label: "น้ำลดแล้ว", color: "#2E7D32"}
     - {key: ankle, rank: 1, emoji: "🦶", label: "ถึงตาตุ่ม", color: "#F9A825"}
@@ -120,3 +129,9 @@ air_quality:
     - {id: 5, emoji: "🔴", label: "มีผลต่อสุขภาพ", color: "#F04646",
        general: "งดกิจกรรมกลางแจ้ง อยู่ในอาคารและปิดหน้าต่าง ถ้าต้องออกไปให้ใส่หน้ากากกันฝุ่น",
        sensitive: "อยู่ในอาคาร ใช้เครื่องฟอกอากาศถ้ามี ถ้ามีอาการผิดปกติให้รีบพบแพทย์"}
+
+# python -m src.alerts.rich_menu (see that module); image: deploy/richmenu/richmenu.png
+rich_menu:
+  create_url: https://api.line.me/v2/bot/richmenu
+  content_url: https://api-data.line.me/v2/bot/richmenu/{id}/content
+  default_url: https://api.line.me/v2/bot/user/all/richmenu/{id}

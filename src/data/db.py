@@ -95,6 +95,16 @@ _MIGRATIONS = {
 SCHEMA_VERSION = max(_MIGRATIONS)
 
 
+class UserData(BaseModel):
+    """Everything stored about one LINE user, for "ข้อมูลของฉัน"."""
+
+    home_district: str | None  # None: no district (outside Bangkok) or no home location
+    has_home: bool
+    live_reports: int  # still on the map and still linked to the user
+    alert_history: int  # (district, last level) rows that stop repeat alerts
+    pending: str | None  # report | route | air
+
+
 class PendingRoute(BaseModel):
     origin: GeoPoint | None  # None: waiting for the start point
 
@@ -231,6 +241,19 @@ class Database:
         self.delete_cooldowns(user_id)
         self.clear_step(user_id)
         self._write("UPDATE community_reports SET reporter=NULL WHERE reporter=?", [(user_id,)])
+
+    def user_data(self, user_id: str, live_since: datetime) -> UserData:
+        """What is stored about one user (PDPA access request), without the values themselves."""
+        home = self._query("SELECT district_name FROM users WHERE line_user_id=?", (user_id,))
+        step = self._query("SELECT kind FROM pending_steps WHERE line_user_id=?", (user_id,))
+        cooldowns = self._query("SELECT COUNT(*) FROM alert_cooldowns WHERE line_user_id=?", (user_id,))[0][0]
+        return UserData(
+            home_district=home[0][0] if home else None,
+            has_home=bool(home),
+            live_reports=self.report_count(user_id, live_since),
+            alert_history=int(cooldowns),
+            pending=step[0][0] if step else None,
+        )
 
     def user_location(self, user_id: str) -> GeoPoint | None:
         rows = self._query("SELECT lat, lon FROM users WHERE line_user_id=?", (user_id,))
