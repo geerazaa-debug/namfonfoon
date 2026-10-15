@@ -168,3 +168,10 @@ Free always-on hosting on Oracle Cloud: see [`docs/DEPLOY.md`](docs/DEPLOY.md) a
 - Radar QPE input. A data request draft to BMA is in `docs/bma_data_request_draft.md`
 - Multi-instance deployment
 - Predictive model: paused. See "Path back to prediction" in `docs/ARCHITECTURE.md`
+
+## Licence
+Code: [MIT](LICENSE). **Data is not covered by the MIT licence** and keeps its owners' terms:
+BMA DDS flood records `frd_dds` and geoBoundaries district shapes (CC BY, attribution required, used in `config/`);
+ThaiWater, Air4Thai and the BMA DDS live map data (terms not stated: fetched live, attributed, not redistributed here;
+public non-commercial use only until written permission); OpenStreetMap (ODbL); OSRM demo server (fair use).
+`research/output/*.json` are derived study results, not raw source data. Not an official warning service.
