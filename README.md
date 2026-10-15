@@ -33,6 +33,7 @@ cp .env.example .env   # fill in values
 | POST | `/v1/route/check` | `X-API-Key` | Does a route polyline cross any risk zone? |
 | GET | `/v1/public/reports` | — | Live citizen water reports (no reporter identity) |
 | GET | `/v1/public/rain` | — | Last hour's rain at wet ThaiWater gauges (empty unless the poller runs) |
+| GET | `/v1/public/road-flood` | — | BMA road flood-depth sensors currently reporting water |
 | GET | `/v1/public/air` | — | Latest PM2.5 at every fresh Air4Thai station (nationwide) |
 | GET | `/privacy` | — | Privacy policy and disclaimers (Thai) |
 | GET | `/map` | — | Public map of citizen reports + gauge rain; `#from=lat,lon&to=lat,lon` draws a checked route (Thai, large type, mobile-first, installable PWA, works offline) |
@@ -97,6 +98,19 @@ fresh gauge is near the route. It is measured rain and public reports, not a for
   logged, and the map link carries them in the `#fragment`, which browsers do not send to the server: `/map` asks OSRM
   for the line itself.
 - Settings: `route_check` in `config/settings.yaml`.
+
+## BMA DDS live data (rain gauges + road flood sensors)
+`weather.bangkok.go.th` (สำนักการระบายน้ำ กทม.) serves its public map from two JSON calls, which we use for **display only**
+(route checks, `/map`, `/v1/public/rain`, `/v1/public/road-flood`), not for alerts:
+- `POST /rain/PageMap/GetDataForUpdate`: ~127 gauges (124 fresh on 2026-10-16), every district, 5-min, `rf1hr` used.
+  A 21 km route now has ~26 gauges nearby instead of 3.
+- `GET /Flood/PageMap/GetData?id=0`: ~247 road flood-depth sensors in cm (`floodTbl`, joined with `dtTbl` status; faulty
+  and tunnel sensors dropped). Route checks list sensors within 200 m with ≥ 2 cm; ≥ 10 cm makes the verdict **warn**.
+
+Undocumented, no licence, no robots.txt, not on data.bangkok.go.th: shared 5-min cache (≤ 2 requests per 5 min whatever
+the traffic), identifying User-Agent with the project mailbox, attribution everywhere, ThaiWater still used if it fails.
+Permission is requested (`docs/bma_data_request_draft.md`, email to disd.dsd@bangkok.go.th). If BMA says no, remove
+`bma_dds`. Switching **alerts** to these gauges changes the advisory and needs a pre-registration first.
 
 ## PM2.5 ("ฝุ่น")
 Type **ฝุ่น** / **PM2.5** (or rich-menu postback `air=start`). A subscriber gets their home area at once; anyone can tap

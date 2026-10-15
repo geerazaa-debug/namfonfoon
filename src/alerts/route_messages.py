@@ -92,6 +92,16 @@ def result(
         lines += ["", f"🌤️ สถานีวัดฝนใกล้เส้นทาง {check.stations_checked} แห่ง: ไม่มีฝน"]
     if air_line:
         lines += ["", air_line]
+    if check.road_floods:
+        lines += ["", f"🚧 น้ำท่วมถนน จากเซ็นเซอร์ กทม. (ใกล้เส้นทาง {check.flood_sensors_checked} จุด)"]
+        lines += [
+            f"• {_place(f.sensor.district, f.along_km)} {f.sensor.name}: น้ำลึก {f.sensor.depth_cm:.0f} ซม."
+            for f in check.road_floods[:MAX_REPORT_LINES]
+        ]
+        if len(check.road_floods) > MAX_REPORT_LINES:
+            lines.append(f"• และอีก {len(check.road_floods) - MAX_REPORT_LINES} จุด ดูได้บนแผนที่")
+    elif check.flood_sensors_checked:
+        lines += ["", f"🚧 เซ็นเซอร์น้ำท่วมถนน กทม. ใกล้เส้นทาง {check.flood_sensors_checked} จุด: ไม่มีน้ำท่วม"]
     if check.reports:
         lines += ["", "🌊 รายงานน้ำจากประชาชน"]
         for x in check.reports[:MAX_REPORT_LINES]:
@@ -104,5 +114,5 @@ def result(
         lines += ["", "📍 ผ่านเขตที่น้ำท่วมบ่อย: " + ", ".join(check.hotspots)]
     if map_url:
         lines += ["", "🗺️ ดูบนแผนที่: " + map_link(map_url, a, b)]
-    lines += ["", "ข้อมูลฝนวัดจริงจากสถานี ThaiWater และรายงานจากประชาชน ไม่ใช่การพยากรณ์"]
+    lines += ["", "ค่าที่วัดได้จริงจากสถานีของ กทม. (สำนักการระบายน้ำ) และ ThaiWater กับรายงานจากประชาชน ไม่ใช่การพยากรณ์"]
     return _text("\n".join(lines), _again())

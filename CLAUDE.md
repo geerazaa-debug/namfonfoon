@@ -24,6 +24,8 @@ Rule-based heavy-rain advisory for Bangkok districts (rain thresholds + BMA DDS 
 - **The system is a rule-based rain advisory, not a flood predictor.** Step 4 (`docs/step4_backtest_result.md`): the multi-factor model did not beat rain-only (PR-AUC 0.148 vs 0.171), and rain-only itself is weak. Never call it "AI", "prediction" or "forecast" in user-facing text. Alert cards must say it is an advisory based on rainfall.
 - The predictive path is **paused**. Reviving it requires dense rain data (BMA gauges or radar QPE), a bare-earth DEM (FABDEM), and a **new pre-registered test on the 2026 season**. The 2025 holdout is spent.
 - Any new model claim needs a pre-registration committed before the data is analysed. No post-hoc threshold or feature changes on a spent holdout.
+- BMA DDS live JSON (`src/data/bma_dds.py`, weather.bangkok.go.th) is undocumented with no licence: display only, never
+  alerts without a prereg; permission requested; stop if BMA objects.
 - Data licences: DDS and geoBoundaries are CC BY (attribution required). Traffy, ThaiWater and Air4Thai are unstated, so no commercial or B2B use without written permission.
 - `local_sensors.py` assumes a placeholder JSON schema until a real provider is wired.
 

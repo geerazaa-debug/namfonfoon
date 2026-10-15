@@ -59,7 +59,7 @@ def hot_east(p: GeoPoint) -> DistrictInfo:
     )
 
 
-def check(stations=(), reports=(), route=(A, B)):
+def check(stations=(), reports=(), route=(A, B), road_floods=()):
     cfg = settings()["route_check"]
     return check_route(
         list(route),
@@ -73,6 +73,10 @@ def check(stations=(), reports=(), route=(A, B)):
         warn_report_rank=cfg["warn_report_rank"],
         levels=report_levels(),
         district_of=hot_east,
+        road_floods=list(road_floods),
+        flood_buffer_m=cfg["flood_buffer_m"],
+        min_flood_cm=cfg["min_flood_cm"],
+        warn_flood_cm=cfg["warn_flood_cm"],
     )
 
 

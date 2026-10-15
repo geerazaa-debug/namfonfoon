@@ -46,6 +46,10 @@
   .aq { display:flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:50%;
     border:3px solid #fff; color:#111; font-weight:700; font-size:16px; box-shadow:0 2px 6px rgba(0,0,0,.4); }
   .leaflet-control-layers { font-family:"Sarabun", system-ui, sans-serif; font-size:16px; }
+  .rf { display:flex; flex-direction:column; align-items:center; justify-content:center; width:52px; height:44px;
+    border-radius:10px; border:3px solid #fff; color:#fff; font-weight:700; font-size:15px; line-height:1.05;
+    box-shadow:0 2px 6px rgba(0,0,0,.45); }
+  .rf small { font-size:11px; font-weight:400; }
   .flag { font-size:30px; filter:drop-shadow(0 2px 3px rgba(0,0,0,.45)); }
   .empty { position:absolute; z-index:500; left:50%; top:16px; transform:translateX(-50%); background:var(--card);
     color:var(--fg); padding:10px 16px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.25); max-width:90%; text-align:center; }
@@ -65,6 +69,8 @@
 <div class="bar">
   <div class="legend" id="legend"></div>
   <div class="legend"><span><i class="dot" style="background:#42a5f5;border:2px solid #1565c0"></i>🌧️ ฝนที่สถานีวัด</span></div>
+  <div class="legend"><span><i class="dot" style="background:#C62828;border-radius:3px"></i>🚧 น้ำท่วมถนน (เซ็นเซอร์ กทม.)
+    <span id="rfStatus"></span></span></div>
   <div class="legend" id="airLegend"></div>
   <button id="me" type="button">📍 ตำแหน่งของฉัน</button>
   <button id="report" class="primary" type="button" hidden>🌊 รายงานน้ำ</button>
@@ -75,6 +81,7 @@
 <div class="how" id="iosHint" hidden>📲 ใช้บ่อย? กดปุ่ม <b>แชร์</b> ของ Safari แล้วเลือก <b>เพิ่มไปยังหน้าจอโฮม</b></div>
 <div class="note">ข้อมูลเป็นรายงานจากประชาชน ยังไม่ได้ตรวจสอบโดยหน่วยงาน · ขอบเส้นประ = มีผู้รายงานคนเดียว ·
   รายงานหายไปเองหลัง <span id="ttl">3</span> ชม. · วงกลมสีฟ้า = ฝนที่วัดได้ในชั่วโมงล่าสุด (ThaiWater) ·
+  ป้ายสี่เหลี่ยม = ความลึกน้ำบนถนนจากเซ็นเซอร์ของสำนักการระบายน้ำ กทม. · ฝนจากสถานีของ กทม. และ ThaiWater ·
   ตัวเลขในวงกลมสี = ฝุ่น PM2.5 (มคก./ลบ.ม.) จากกรมควบคุมมลพิษ (Air4Thai) รวมสถานีของ กทม. ·
   เส้นทางจาก OSRM · แผนที่ © OpenStreetMap contributors · <a href="/privacy">ความเป็นส่วนตัวและข้อควรรู้</a></div>
 
@@ -100,7 +107,10 @@ const layer = L.layerGroup().addTo(map);
 const rainLayer = L.layerGroup().addTo(map);
 const routeLayer = L.layerGroup().addTo(map);
 const airLayer = L.layerGroup().addTo(map);
-L.control.layers(null, { "🌊 รายงานน้ำ": layer, "🌧️ ฝน": rainLayer, "😷 ฝุ่น PM2.5": airLayer }, { collapsed: false }).addTo(map);
+const roadLayer = L.layerGroup().addTo(map);
+L.control.layers(null, {
+  "🌊 รายงานน้ำ": layer, "🚧 น้ำท่วมถนน": roadLayer, "🌧️ ฝน": rainLayer, "😷 ฝุ่น PM2.5": airLayer,
+}, { collapsed: false }).addTo(map);
 let osrmUrl = null;
 
 function ago(m) { return m < 1 ? "เมื่อสักครู่" : m < 60 ? `${m} นาทีที่แล้ว` : `${Math.floor(m / 60)} ชม. ${m % 60} นาทีที่แล้ว`; }
@@ -149,7 +159,9 @@ function rainPopup(s) {
   head.textContent = `${s.rain.emoji} ${s.rain.label} ${mm} มม.`;
   const meta = document.createElement("div");
   meta.textContent = `${s.district ? "เขต" + s.district : "นอกเขต กทม."} · ฝนในชั่วโมงล่าสุด · วัดเมื่อ ${ago(s.minutes_ago)}`;
-  d.append(head, meta);
+  const src = document.createElement("div");
+  src.style.color = "var(--muted)"; src.textContent = `ข้อมูล: ${s.source}`;
+  d.append(head, meta, src);
   return d;
 }
 
@@ -204,6 +216,33 @@ async function loadAir() {
   } catch (e) { /* air layer is optional */ }
 }
 
+async function loadRoadFlood() {
+  try {
+    const data = await (await fetch("/v1/public/road-flood", { cache: "no-store" })).json();
+    roadLayer.clearLayers();
+    document.getElementById("rfStatus").textContent = data.sensors_online
+      ? `· ออนไลน์ ${data.sensors_online} จุด, น้ำท่วม ${data.flooded.length} จุด` : "";
+    for (const f of data.flooded) {
+      const color = f.depth_cm >= data.warn_flood_cm ? "#C62828" : "#EF6C00";
+      const icon = L.divIcon({
+        className: "", iconSize: [52, 44], iconAnchor: [26, 22],
+        html: `<div class="rf" style="background:${color}">${Math.round(f.depth_cm)}<small>ซม.</small></div>`,
+      });
+      const d = document.createElement("div");
+      const head = document.createElement("div");
+      head.style.fontWeight = "700"; head.style.fontSize = "1.15em";
+      head.textContent = `🚧 น้ำลึก ${Math.round(f.depth_cm)} ซม.`;
+      const meta = document.createElement("div");
+      meta.textContent = `${f.name}${f.district ? " เขต" + f.district : ""} · วัดเมื่อ ${ago(f.minutes_ago)}`;
+      const src = document.createElement("div");
+      src.style.color = "var(--muted)"; src.textContent = "เซ็นเซอร์ของสำนักการระบายน้ำ กทม.";
+      d.append(head, meta, src);
+      L.marker([f.lat, f.lon], { icon, title: `น้ำลึก ${Math.round(f.depth_cm)} ซม.`, zIndexOffset: 500 })
+        .bindPopup(d).addTo(roadLayer);
+    }
+  } catch (e) { /* road flood layer is optional */ }
+}
+
 function routeFromHash() {
   const h = new URLSearchParams(location.hash.slice(1));
   const pt = (v) => {
@@ -255,7 +294,8 @@ document.getElementById("me").addEventListener("click", () => {
 load();
 loadRain();
 loadAir();
-setInterval(() => { load(); loadRain(); loadAir(); }, 120000);
+loadRoadFlood();
+setInterval(() => { load(); loadRain(); loadAir(); loadRoadFlood(); }, 120000);
 
 fetch("/v1/public/app-config").then((r) => r.json()).then((cfg) => {
   osrmUrl = cfg.osrm_url;
@@ -268,7 +308,7 @@ fetch("/v1/public/app-config").then((r) => r.json()).then((cfg) => {
 
 if ("serviceWorker" in navigator) {
   // First visit: the worker takes control after the first fetch; refetch so offline has a copy.
-  navigator.serviceWorker.addEventListener("controllerchange", () => { load(); loadRain(); loadAir(); }, { once: true });
+  navigator.serviceWorker.addEventListener("controllerchange", () => { load(); loadRain(); loadAir(); loadRoadFlood(); }, { once: true });
   navigator.serviceWorker.register("/sw.js").catch(() => {});
 }
 let installEvt = null;

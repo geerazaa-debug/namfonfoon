@@ -34,6 +34,22 @@ class StationRain(BaseModel):
     rain_1h_mm: float = Field(ge=0)
 
 
+class RoadFlood(BaseModel):
+    """A BMA road flood-depth sensor reading."""
+
+    sensor_id: str
+    name: str
+    district: str | None
+    location: GeoPoint
+    observed_at: datetime
+    depth_cm: float = Field(ge=0)
+
+
+class FloodOnRoute(BaseModel):
+    along_km: float
+    sensor: RoadFlood
+
+
 class RainStretch(BaseModel):
     """Wettest gauge per district along the route."""
 
@@ -57,6 +73,8 @@ class RouteCheck(BaseModel):
     stations_checked: int  # fresh gauges near the route, wet or dry
     rain: list[RainStretch]  # route order
     reports: list[ReportOnRoute]  # route order, flood levels only
+    flood_sensors_checked: int  # fresh BMA road sensors near the route, wet or dry
+    road_floods: list[FloodOnRoute]  # route order, depth >= min_flood_cm
     hotspots: list[str]  # districts on the route with frequent recorded floods, route order
 
 
@@ -115,6 +133,11 @@ def check_route(
     levels: dict[str, ReportLevel],
     district_of: Callable[[GeoPoint], DistrictInfo | None],
     classes: Sequence[RainClass] | None = None,
+    road_floods: Sequence[RoadFlood] = (),
+    flood_buffer_m: float = 200,
+    min_flood_cm: float = 2,
+    warn_flood_cm: float = 10,
+    max_flood_age: timedelta = timedelta(minutes=30),
 ) -> RouteCheck:
     classes = classes or rain_classes()
     pad = station_buffer_km / 100  # ~1 km per 0.01 deg; cheap prefilter before the per-segment scan
@@ -148,6 +171,17 @@ def check_route(
         if dist * 1000 <= report_buffer_m:
             on_route.append(ReportOnRoute(along_km=along, report=r))
 
+    sensors_checked, flooded = 0, []
+    for f in road_floods:
+        if not (now - max_flood_age <= f.observed_at <= now + timedelta(minutes=5)):
+            continue
+        dist, along = locate_on_route(f.location, route)
+        if dist * 1000 > flood_buffer_m:
+            continue
+        sensors_checked += 1
+        if f.depth_cm >= min_flood_cm:
+            flooded.append(FloodOnRoute(along_km=along, sensor=f))
+
     hotspots: list[str] = []
     for p in sample_route(route, 0.5):
         d = district_of(p)
@@ -156,11 +190,12 @@ def check_route(
 
     rain = sorted(wettest.values(), key=lambda x: x.along_km)
     worst_rank = max((levels[r.report.level].rank for r in on_route), default=0)
-    if any(x.rain_1h_mm >= warn_rain_mm for x in rain) or worst_rank >= warn_report_rank:
+    deep = any(f.sensor.depth_cm >= warn_flood_cm for f in flooded)
+    if any(x.rain_1h_mm >= warn_rain_mm for x in rain) or worst_rank >= warn_report_rank or deep:
         verdict: Verdict = "warn"
-    elif rain or on_route:
+    elif rain or on_route or flooded:
         verdict = "caution"
-    elif checked == 0:
+    elif checked == 0 and sensors_checked == 0:
         verdict = "no_data"
     else:
         verdict = "clear"
@@ -170,5 +205,7 @@ def check_route(
         stations_checked=checked,
         rain=rain,
         reports=sorted(on_route, key=lambda x: x.along_km),
+        flood_sensors_checked=sensors_checked,
+        road_floods=sorted(flooded, key=lambda x: x.along_km),
         hotspots=hotspots,
     )

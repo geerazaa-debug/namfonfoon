@@ -21,6 +21,24 @@ def air_feed(monkeypatch):
     async def fake_fetch_air() -> list:
         return list(stations)
 
-    monkeypatch.setattr(server, "_air_cache", None)
+    server.air_cache.reset()
     monkeypatch.setattr(server, "fetch_air", fake_fetch_air)
     return stations
+
+
+@pytest.fixture(autouse=True)
+def bma_feed(monkeypatch):
+    """No network: BMA DDS returns these lists (empty unless a test fills them)."""
+    feed: dict[str, list] = {"rain": [], "floods": []}
+
+    async def fake_rain() -> list:
+        return list(feed["rain"])
+
+    async def fake_floods() -> list:
+        return list(feed["floods"])
+
+    server.bma_rain_cache.reset()
+    server.bma_flood_cache.reset()
+    monkeypatch.setattr(server, "fetch_bma_rain", fake_rain)
+    monkeypatch.setattr(server, "fetch_bma_floods", fake_floods)
+    return feed

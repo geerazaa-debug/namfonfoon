@@ -89,6 +89,9 @@ route_check:
   max_rain_age_min: 90         # older gauge readings are ignored
   warn_rain_mm: 10             # 1 h rain at any gauge on the route -> "warn"
   warn_report_rank: 2          # a report at this level rank or deeper (knee) -> "warn"
+  flood_buffer_m: 200          # BMA road flood sensors within this distance of the route
+  min_flood_cm: 2              # sensor depth below this counts as dry (sensor noise)
+  warn_flood_cm: 10            # any sensor on the route at this depth or more -> "warn"
   rain_classes:                # by 1 h rain at a gauge; the highest matching min_mm wins
     - {key: light, min_mm: 0.5, emoji: "🌦️", label: "ฝนเล็กน้อย"}
     - {key: moderate, min_mm: 5, emoji: "🌧️", label: "ฝนปานกลาง"}
@@ -135,3 +138,15 @@ rich_menu:
   create_url: https://api.line.me/v2/bot/richmenu
   content_url: https://api-data.line.me/v2/bot/richmenu/{id}/content
   default_url: https://api.line.me/v2/bot/user/all/richmenu/{id}
+
+# BMA Department of Drainage and Sewerage live data: the JSON the public map weather.bangkok.go.th calls
+# itself (undocumented, licence not stated). Display only (route checks, /map), attributed, cached for all
+# users; permission requested (docs/bma_data_request_draft.md). Stop using it if BMA asks.
+bma_dds:
+  rain_url: https://weather.bangkok.go.th/rain/PageMap/GetDataForUpdate   # POST; ~127 gauges, 5-min
+  flood_url: https://weather.bangkok.go.th/Flood/PageMap/GetData?id=0     # GET; ~247 road depth sensors
+  user_agent: "NamFonFoon/0.6 (free public service; +mailto:namfonfoon.th@gmail.com)"
+  timeout_s: 30
+  max_retries: 1
+  cache_min: 5                 # at most 2 requests per 5 min, whatever the traffic
+  max_age_min: 30              # older readings are ignored

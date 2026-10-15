@@ -32,8 +32,11 @@ from src.alerts.line_login import InvalidIdToken, verify_id_token
 from src.alerts.line_notifier import LineNotifier, verify_signature
 from src.config import risk_thresholds, settings
 from src.data.air4thai import AirStation, fetch_air
+from src.data.bma_dds import fetch_floods as fetch_bma_floods
+from src.data.bma_dds import fetch_rain as fetch_bma_rain
 from src.data.db import Database
 from src.data.osrm import fetch_route
+from src.data.snapshot_cache import SnapshotCache
 from src.data.thaiwater_rain import RainAccumulator
 from src.data.validator import BoundingBox, GeoPoint
 from src.engine.air import AirBand, air_bands, air_on_route, nearest_air
@@ -41,7 +44,15 @@ from src.engine.community import MapReport, ReportLevel, map_view, report_levels
 from src.engine.districts import district_index
 from src.engine.geofence import FloodZone, ZoneHit, zones_near_point, zones_on_route
 from src.engine.risk_analyzer import AlertInput, Assessment, RuleBasedAnalyzer
-from src.engine.route_check import RainClass, RouteCheck, check_route, rain_class, rain_classes
+from src.engine.route_check import (
+    RainClass,
+    RoadFlood,
+    RouteCheck,
+    StationRain,
+    check_route,
+    rain_class,
+    rain_classes,
+)
 
 log = logging.getLogger(__name__)
 
@@ -49,7 +60,22 @@ analyzer = RuleBasedAnalyzer()
 ZONES: dict[str, FloodZone] = {}
 pipeline: AlertPipeline | None = None
 _db: Database | None = None
-_air_cache: tuple[datetime, list[AirStation]] | None = None
+
+
+def _minutes(section: str) -> timedelta:
+    return timedelta(minutes=settings()[section]["cache_min"])
+
+
+# One copy per source for all users. The lambdas look the fetchers up at call time (tests replace them).
+air_cache: SnapshotCache[list[AirStation]] = SnapshotCache(
+    "Air4Thai", lambda: fetch_air(), lambda: _minutes("air_quality")
+)
+bma_rain_cache: SnapshotCache[list[StationRain]] = SnapshotCache(
+    "BMA rain", lambda: fetch_bma_rain(), lambda: _minutes("bma_dds")
+)
+bma_flood_cache: SnapshotCache[list[RoadFlood]] = SnapshotCache(
+    "BMA road floods", lambda: fetch_bma_floods(), lambda: _minutes("bma_dds")
+)
 ROOT = Path(__file__).resolve().parents[2]
 STATIC = Path(__file__).resolve().parent / "static"
 
@@ -106,7 +132,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
             pipeline = None
 
 
-app = FastAPI(title="น้ำ ฝน ฝุ่น (Nam Fon Foon) API", version="0.6.0", lifespan=lifespan)
+app = FastAPI(title="น้ำ ฝน ฝุ่น (Nam Fon Foon) API", version="0.7.0", lifespan=lifespan)
 
 
 def require_api_key(x_api_key: str = Header(default="")) -> None:
@@ -201,6 +227,7 @@ class PublicRain(BaseModel):
     rain_1h_mm: float
     rain: RainClass
     minutes_ago: int
+    source: str  # attribution for the popup
 
 
 class PublicRainView(BaseModel):
@@ -210,11 +237,10 @@ class PublicRainView(BaseModel):
 
 
 @app.get("/v1/public/rain")
-def public_rain() -> PublicRainView:
-    """Last hour's rain at gauges for the public map (ThaiWater; empty unless the poller runs)."""
+async def public_rain() -> PublicRainView:
+    """Last hour's rain at wet gauges for the public map: BMA DDS (5-min) + ThaiWater (when the poller runs)."""
     now = datetime.now(UTC)
     classes = rain_classes()
-    since = now - timedelta(minutes=settings()["route_check"]["max_rain_age_min"])
     stations = [
         PublicRain(
             lat=s.location.lat,
@@ -223,25 +249,74 @@ def public_rain() -> PublicRainView:
             rain_1h_mm=s.rain_1h_mm,
             rain=cls,
             minutes_ago=int((now - s.observed_at).total_seconds() // 60),
+            source="สำนักการระบายน้ำ กทม." if s.station_id.startswith("bma:") else "ThaiWater",
         )
-        for s in get_db().latest_rain(since)
+        for s in await rain_stations(now)
         if (cls := rain_class(s.rain_1h_mm, classes))
     ]
     return PublicRainView(generated_at=now, classes=classes, stations=stations)
 
 
+class PublicRoadFlood(BaseModel):
+    lat: float
+    lon: float
+    name: str
+    district: str | None
+    depth_cm: float
+    minutes_ago: int
+
+
+class PublicRoadFloodView(BaseModel):
+    generated_at: datetime
+    sensors_online: int  # fresh road sensors, wet or dry
+    min_flood_cm: float
+    warn_flood_cm: float
+    flooded: list[PublicRoadFlood]
+
+
+@app.get("/v1/public/road-flood")
+async def public_road_flood() -> PublicRoadFloodView:
+    """BMA DDS road flood-depth sensors currently reporting water (display only, attributed)."""
+    now = datetime.now(UTC)
+    cfg = settings()["route_check"]
+    sensors = await road_floods(now)
+    flooded = [
+        PublicRoadFlood(
+            lat=f.location.lat,
+            lon=f.location.lon,
+            name=f.name,
+            district=f.district,
+            depth_cm=f.depth_cm,
+            minutes_ago=int((now - f.observed_at).total_seconds() // 60),
+        )
+        for f in sensors
+        if f.depth_cm >= cfg["min_flood_cm"]
+    ]
+    return PublicRoadFloodView(
+        generated_at=now,
+        sensors_online=len(sensors),
+        min_flood_cm=cfg["min_flood_cm"],
+        warn_flood_cm=cfg["warn_flood_cm"],
+        flooded=sorted(flooded, key=lambda f: -f.depth_cm),
+    )
+
+
 async def air_stations(now: datetime) -> list[AirStation] | None:
     """Air4Thai snapshot shared by all users for `cache_min`; the last copy (or None) when a fetch fails."""
-    global _air_cache
-    if _air_cache and now - _air_cache[0] < timedelta(minutes=settings()["air_quality"]["cache_min"]):
-        return _air_cache[1]
-    try:
-        stations = await fetch_air()
-    except (httpx.HTTPError, ValidationError, ValueError) as exc:
-        log.warning("Air4Thai fetch failed: %s", type(exc).__name__)
-        return _air_cache[1] if _air_cache else None
-    _air_cache = (now, stations)
-    return stations
+    return await air_cache.get(now)
+
+
+async def rain_stations(now: datetime) -> list[StationRain]:
+    """ThaiWater gauges (from the poller's store) + BMA DDS gauges, each within its own freshness limit."""
+    thaiwater = get_db().latest_rain(now - timedelta(minutes=settings()["route_check"]["max_rain_age_min"]))
+    bma_age = timedelta(minutes=settings()["bma_dds"]["max_age_min"])
+    bma = [s for s in await bma_rain_cache.get(now) or [] if now - bma_age <= s.observed_at]
+    return thaiwater + bma
+
+
+async def road_floods(now: datetime) -> list[RoadFlood]:
+    age = timedelta(minutes=settings()["bma_dds"]["max_age_min"])
+    return [f for f in await bma_flood_cache.get(now) or [] if now - age <= f.observed_at]
 
 
 class PublicAir(BaseModel):
@@ -386,7 +461,7 @@ async def run_route_check(a: GeoPoint, b: GeoPoint, now: datetime) -> tuple[list
     route = path.points if path else [a, b]
     check = check_route(
         route,
-        get_db().latest_rain(now - timedelta(minutes=cfg["max_rain_age_min"])),
+        await rain_stations(now),
         live_map_reports(now),
         now,
         station_buffer_km=cfg["station_buffer_km"],
@@ -396,6 +471,11 @@ async def run_route_check(a: GeoPoint, b: GeoPoint, now: datetime) -> tuple[list
         warn_report_rank=cfg["warn_report_rank"],
         levels=report_levels(),
         district_of=district_index().locate,
+        road_floods=await road_floods(now),
+        flood_buffer_m=cfg["flood_buffer_m"],
+        min_flood_cm=cfg["min_flood_cm"],
+        warn_flood_cm=cfg["warn_flood_cm"],
+        max_flood_age=timedelta(minutes=settings()["bma_dds"]["max_age_min"]),
     )
     log.info("route check verdict=%s", check.verdict)  # never log points
     return route, check, path is None
