@@ -32,7 +32,7 @@ the database in `/var/lib/floodwatch` and the env file are kept. Previous releas
 - OA profile / LIFF app: privacy policy URL `https://<domain>/privacy`.
 - LIFF: see README "Citizen water reports". Endpoint `https://<domain>/report`.
 - Reply links use `PUBLIC_BASE_URL`, which setup.sh writes into `/etc/floodwatch.env` from the deploy domain.
-- Once the project mailbox exists, set `project.contact_email` in `config/settings.yaml` and push again.
+- Project mailbox: `project.contact_email` in `config/settings.yaml` (namfonfoon.th@gmail.com), shown on `/privacy`.
 
 ## Operate
 - Logs: `journalctl -u floodwatch -f` (no userIds or coordinates are logged).

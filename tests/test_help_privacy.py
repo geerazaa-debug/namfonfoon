@@ -70,9 +70,9 @@ def test_privacy_page_and_contact_config(line, monkeypatch):  # noqa: F811
     page = client.get("/privacy")
     assert page.status_code == 200 and "ลบข้อมูลของฉัน" in page.text and "OSRM" in page.text
     cfg = client.get("/v1/public/app-config").json()
-    assert cfg["name"] == "น้ำ ฝน ฝุ่น" and cfg["contact_email"] is None
-    monkeypatch.setitem(server.settings()["project"], "contact_email", "team@nff.test")
-    assert client.get("/v1/public/app-config").json()["contact_email"] == "team@nff.test"
+    assert cfg["name"] == "น้ำ ฝน ฝุ่น" and cfg["contact_email"] == "namfonfoon.th@gmail.com"
+    monkeypatch.setitem(server.settings()["project"], "contact_email", "")
+    assert client.get("/v1/public/app-config").json()["contact_email"] is None
 
 
 # ---- rich menu ----

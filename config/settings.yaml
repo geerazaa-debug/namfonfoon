@@ -17,7 +17,7 @@ local_sensors:
 # deploy/setup.sh writes from the deploy domain; without it replies carry no links.
 project:
   name: "น้ำ ฝน ฝุ่น"
-  contact_email: ""            # project mailbox shown on /privacy; empty -> LINE chat only
+  contact_email: "namfonfoon.th@gmail.com"   # project mailbox shown on /privacy; "" -> LINE chat only
   privacy_updated: "2026-10-16"
   help_texts: ["วิธีใช้", "ช่วยเหลือ", "เมนู", "help", "สวัสดี"]
   my_data_texts: ["ข้อมูลของฉัน"]
