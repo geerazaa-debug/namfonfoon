@@ -150,3 +150,21 @@ bma_dds:
   max_retries: 1
   cache_min: 5                 # at most 2 requests per 5 min, whatever the traffic
   max_age_min: 30              # older readings are ignored
+
+# River / canal levels via LINE ("ระดับน้ำ") and on /map: ThaiWater waterlevel_load, Greater Bangkok box.
+# Status = ThaiWater's own situation_level (consistent with % of bank: 3 = 30-70, 4 = 70-100, 5 = >100).
+river_level:
+  url: https://api-v3.thaiwater.net/api/v1/thaiwater30/public/waterlevel_load
+  timeout_s: 60
+  max_retries: 2
+  cache_min: 10
+  max_age_min: 360            # the feed can lag hours at night; every line shows its age
+  trigger_texts: ["ระดับน้ำ", "น้ำขึ้น", "แม่น้ำ", "เจ้าพระยา", "น้ำทะเลหนุน"]
+  key_stations: ["CPY014", "C.12", "CPY015", "GLF001"]   # Chao Phraya north -> south: Nonthaburi .. river mouth
+  nearest: 3                   # subscribers get this many stations nearest home
+  levels:
+    - {id: 1, emoji: "🟡", label: "น้ำน้อยวิกฤต", color: "#F9A825"}
+    - {id: 2, emoji: "🟡", label: "น้ำน้อย", color: "#FBC02D"}
+    - {id: 3, emoji: "🟢", label: "ปกติ", color: "#2E7D32"}
+    - {id: 4, emoji: "🟠", label: "น้ำมาก", color: "#EF6C00"}
+    - {id: 5, emoji: "🔴", label: "ล้นตลิ่ง", color: "#C62828"}

@@ -50,6 +50,8 @@
     border-radius:10px; border:3px solid #fff; color:#fff; font-weight:700; font-size:15px; line-height:1.05;
     box-shadow:0 2px 6px rgba(0,0,0,.45); }
   .rf small { font-size:11px; font-weight:400; }
+  .rv { padding:3px 7px; border-radius:8px; border:2px solid #fff; color:#fff; font-weight:700; font-size:14px;
+    white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,.4); }
   .flag { font-size:30px; filter:drop-shadow(0 2px 3px rgba(0,0,0,.45)); }
   .empty { position:absolute; z-index:500; left:50%; top:16px; transform:translateX(-50%); background:var(--card);
     color:var(--fg); padding:10px 16px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.25); max-width:90%; text-align:center; }
@@ -82,7 +84,7 @@
 <div class="note">ข้อมูลเป็นรายงานจากประชาชน ยังไม่ได้ตรวจสอบโดยหน่วยงาน · ขอบเส้นประ = มีผู้รายงานคนเดียว ·
   รายงานหายไปเองหลัง <span id="ttl">3</span> ชม. · วงกลมสีฟ้า = ฝนที่วัดได้ในชั่วโมงล่าสุด (ThaiWater) ·
   ป้ายสี่เหลี่ยม = ความลึกน้ำบนถนนจากเซ็นเซอร์ของสำนักการระบายน้ำ กทม. · ฝนจากสถานีของ กทม. และ ThaiWater ·
-  ตัวเลขในวงกลมสี = ฝุ่น PM2.5 (มคก./ลบ.ม.) จากกรมควบคุมมลพิษ (Air4Thai) รวมสถานีของ กทม. ·
+  ป้าย % = ระดับน้ำแม่น้ำ/คลองเทียบตลิ่ง (ThaiWater) · ตัวเลขในวงกลมสี = ฝุ่น PM2.5 (มคก./ลบ.ม.) จากกรมควบคุมมลพิษ (Air4Thai) รวมสถานีของ กทม. ·
   เส้นทางจาก OSRM · แผนที่ © OpenStreetMap contributors · <a href="/privacy">ความเป็นส่วนตัวและข้อควรรู้</a></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -108,8 +110,10 @@ const rainLayer = L.layerGroup().addTo(map);
 const routeLayer = L.layerGroup().addTo(map);
 const airLayer = L.layerGroup().addTo(map);
 const roadLayer = L.layerGroup().addTo(map);
+const riverLayer = L.layerGroup().addTo(map);
 L.control.layers(null, {
-  "🌊 รายงานน้ำ": layer, "🚧 น้ำท่วมถนน": roadLayer, "🌧️ ฝน": rainLayer, "😷 ฝุ่น PM2.5": airLayer,
+  "🌊 รายงานน้ำ": layer, "🚧 น้ำท่วมถนน": roadLayer, "🏞️ ระดับน้ำแม่น้ำ/คลอง": riverLayer,
+  "🌧️ ฝน": rainLayer, "😷 ฝุ่น PM2.5": airLayer,
 }, { collapsed: false }).addTo(map);
 let osrmUrl = null;
 
@@ -243,6 +247,30 @@ async function loadRoadFlood() {
   } catch (e) { /* road flood layer is optional */ }
 }
 
+async function loadRiver() {
+  try {
+    const data = await (await fetch("/v1/public/river", { cache: "no-store" })).json();
+    const levels = Object.fromEntries(data.levels.map((l) => [l.id, l]));
+    riverLayer.clearLayers();
+    for (const s of data.stations) {
+      const lv = levels[s.situation];
+      const arrow = s.rising === true ? "⬆" : s.rising === false ? "⬇" : "";
+      const icon = L.divIcon({ className: "", iconSize: null, iconAnchor: [24, 12],
+        html: `<div class="rv" style="background:${lv.color}">${Math.round(s.bank_percent)}%${arrow}</div>` });
+      const d = document.createElement("div");
+      const head = document.createElement("div");
+      head.style.fontWeight = "700"; head.style.fontSize = "1.15em";
+      head.textContent = `${lv.emoji} ${Math.round(s.bank_percent)}% ของตลิ่ง · ${lv.label}`;
+      const meta = document.createElement("div");
+      meta.textContent = `${s.name} ${s.area} · ${new Date(s.observed_at).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.`;
+      const src = document.createElement("div");
+      src.style.color = "var(--muted)"; src.textContent = "ข้อมูล: ThaiWater · สถานะตามเกณฑ์ของ ThaiWater";
+      d.append(head, meta, src);
+      L.marker([s.location.lat, s.location.lon], { icon, title: s.name }).bindPopup(d).addTo(riverLayer);
+    }
+  } catch (e) { /* river layer is optional */ }
+}
+
 function routeFromHash() {
   const h = new URLSearchParams(location.hash.slice(1));
   const pt = (v) => {
@@ -295,7 +323,8 @@ load();
 loadRain();
 loadAir();
 loadRoadFlood();
-setInterval(() => { load(); loadRain(); loadAir(); loadRoadFlood(); }, 120000);
+loadRiver();
+setInterval(() => { load(); loadRain(); loadAir(); loadRoadFlood(); loadRiver(); }, 120000);
 
 fetch("/v1/public/app-config").then((r) => r.json()).then((cfg) => {
   osrmUrl = cfg.osrm_url;
@@ -308,7 +337,7 @@ fetch("/v1/public/app-config").then((r) => r.json()).then((cfg) => {
 
 if ("serviceWorker" in navigator) {
   // First visit: the worker takes control after the first fetch; refetch so offline has a copy.
-  navigator.serviceWorker.addEventListener("controllerchange", () => { load(); loadRain(); loadAir(); loadRoadFlood(); }, { once: true });
+  navigator.serviceWorker.addEventListener("controllerchange", () => { load(); loadRain(); loadAir(); loadRoadFlood(); loadRiver(); }, { once: true });
   navigator.serviceWorker.register("/sw.js").catch(() => {});
 }
 let installEvt = null;

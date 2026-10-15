@@ -26,6 +26,7 @@ from pydantic import BaseModel, Field, ValidationError
 from src.alerts import air_messages as am
 from src.alerts import help_messages as hm
 from src.alerts import report_messages as rm
+from src.alerts import river_messages as rvm
 from src.alerts import route_messages as rtm
 from src.alerts.dispatcher import AlertPipeline, CooldownTracker, default_fetch
 from src.alerts.line_login import InvalidIdToken, verify_id_token
@@ -37,12 +38,13 @@ from src.data.bma_dds import fetch_rain as fetch_bma_rain
 from src.data.db import Database
 from src.data.osrm import fetch_route
 from src.data.snapshot_cache import SnapshotCache
+from src.data.thaiwater_level import RiverLevel, RiverStation, fetch_levels, river_levels
 from src.data.thaiwater_rain import RainAccumulator
 from src.data.validator import BoundingBox, GeoPoint
 from src.engine.air import AirBand, air_bands, air_on_route, nearest_air
 from src.engine.community import MapReport, ReportLevel, map_view, report_levels
 from src.engine.districts import district_index
-from src.engine.geofence import FloodZone, ZoneHit, zones_near_point, zones_on_route
+from src.engine.geofence import FloodZone, ZoneHit, haversine_km, zones_near_point, zones_on_route
 from src.engine.risk_analyzer import AlertInput, Assessment, RuleBasedAnalyzer
 from src.engine.route_check import (
     RainClass,
@@ -72,6 +74,9 @@ air_cache: SnapshotCache[list[AirStation]] = SnapshotCache(
 )
 bma_rain_cache: SnapshotCache[list[StationRain]] = SnapshotCache(
     "BMA rain", lambda: fetch_bma_rain(), lambda: _minutes("bma_dds")
+)
+river_cache: SnapshotCache[list[RiverStation]] = SnapshotCache(
+    "ThaiWater levels", lambda: fetch_levels(), lambda: _minutes("river_level")
 )
 bma_flood_cache: SnapshotCache[list[RoadFlood]] = SnapshotCache(
     "BMA road floods", lambda: fetch_bma_floods(), lambda: _minutes("bma_dds")
@@ -317,6 +322,44 @@ async def rain_stations(now: datetime) -> list[StationRain]:
 async def road_floods(now: datetime) -> list[RoadFlood]:
     age = timedelta(minutes=settings()["bma_dds"]["max_age_min"])
     return [f for f in await bma_flood_cache.get(now) or [] if now - age <= f.observed_at]
+
+
+async def river_stations(now: datetime) -> list[RiverStation] | None:
+    """Fresh river/canal stations; None when ThaiWater cannot be reached and nothing is cached."""
+    stations = await river_cache.get(now)
+    if stations is None:
+        return None
+    age = timedelta(minutes=settings()["river_level"]["max_age_min"])
+    return [s for s in stations if now - age <= s.observed_at]
+
+
+class PublicRiverView(BaseModel):
+    generated_at: datetime
+    levels: list[RiverLevel]
+    stations: list[RiverStation]
+
+
+@app.get("/v1/public/river")
+async def public_river() -> PublicRiverView:
+    """River and canal levels around Bangkok (ThaiWater status, % of bank)."""
+    now = datetime.now(UTC)
+    return PublicRiverView(
+        generated_at=now, levels=list(river_levels().values()), stations=await river_stations(now) or []
+    )
+
+
+async def river_reply(home: GeoPoint | None, now: datetime) -> list[dict[str, Any]]:
+    cfg = settings()["river_level"]
+    stations = await river_stations(now)
+    if not stations:
+        return [rvm.unavailable()]
+    if home:
+        ranked = sorted(((haversine_km(home, s.location), s) for s in stations), key=lambda x: x[0])[: cfg["nearest"]]
+        picked = [(s, km) for km, s in ranked]
+    else:
+        by_code = {s.code: s for s in stations}
+        picked = [(by_code[c], None) for c in cfg["key_stations"] if c in by_code]
+    return [rvm.result(picked, river_levels(), near_home=home is not None, map_url=public_url("/map"), now=now)]
 
 
 class PublicAir(BaseModel):
@@ -569,6 +612,8 @@ async def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]
         db.start_air(user_id, now)  # "check elsewhere" button shares a location next
         home = db.user_location(user_id)
         return await air_reply(home, now, at_home=True) if home else [am.ask_location(air_cfg["pending_ttl_min"])]
+    if text in settings()["river_level"]["trigger_texts"] or data == rvm.POSTBACK_START:
+        return await river_reply(db.user_location(user_id), now)
     if data is not None:
         key = data.removeprefix(rm.POSTBACK_PREFIX) if data.startswith(rm.POSTBACK_PREFIX) else None
         if key == "start":  # rich-menu button

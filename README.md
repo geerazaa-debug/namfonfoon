@@ -112,6 +112,13 @@ the traffic), identifying User-Agent with the project mailbox, attribution every
 Permission is requested (`docs/bma_data_request_draft.md`, email to disd.dsd@bangkok.go.th). If BMA says no, remove
 `bma_dds`. Switching **alerts** to these gauges changes the advisory and needs a pre-registration first.
 
+## River and canal levels ("ระดับน้ำ")
+Type **ระดับน้ำ** / **น้ำขึ้น** (or postback `river=start`): the key Chao Phraya stations north → south (Nonthaburi
+CPY014, Samsen C.12, Krungthep Bridge CPY015, river mouth GLF001), or the 3 nearest a subscriber's home. Each line: % of
+bank height, ThaiWater's own status (1-5), rising/falling vs the previous reading, time. `/map` shows all ~21 stations in
+the Greater Bangkok box. Source `public/waterlevel_load`, cached 10 min. Canal stations are pump-managed, so their % can
+swing with operations; no push alerts (LINE quota).
+
 ## PM2.5 ("ฝุ่น")
 Type **ฝุ่น** / **PM2.5** (or rich-menu postback `air=start`). A subscriber gets their home area at once; anyone can tap
 **📍 ส่งตำแหน่ง** / **📍 เช็คที่อื่น** to check any place. The reply gives the nearest fresh station (≤ 15 km, ≤ 3 h old),

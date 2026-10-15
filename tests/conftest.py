@@ -37,6 +37,13 @@ def bma_feed(monkeypatch):
     async def fake_floods() -> list:
         return list(feed["floods"])
 
+    feed["river"] = []
+
+    async def fake_river() -> list:
+        return list(feed["river"])
+
+    server.river_cache.reset()
+    monkeypatch.setattr(server, "fetch_levels", fake_river)
     server.bma_rain_cache.reset()
     server.bma_flood_cache.reset()
     monkeypatch.setattr(server, "fetch_bma_rain", fake_rain)
