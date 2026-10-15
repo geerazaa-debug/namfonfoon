@@ -1,2 +1,5 @@
 deploy/** text eol=lf
 *.sh text eol=lf
+# Binary assets under deploy/ must never get line-ending conversion (later lines win).
+*.png binary
+*.jpg binary

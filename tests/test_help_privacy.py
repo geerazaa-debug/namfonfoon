@@ -126,3 +126,13 @@ def test_install_creates_uploads_and_sets_default():
     assert seen[1].headers["content-type"] == "image/png" and json.loads(seen[0].content)["selected"] is True
     with pytest.raises(ValueError):
         asyncio.run(rmenu.install(b"x" * (rmenu.MAX_IMAGE_BYTES + 1), menu, token="tok", cfg=cfg))
+
+
+def test_gitattributes_keep_pngs_binary():
+    """deploy/** is forced to LF; without a later binary rule git corrupts richmenu.png (its header has CRLF)."""
+    lines = [
+        ln.split()[0]
+        for ln in (rmenu.IMAGE.parents[2] / ".gitattributes").read_text().splitlines()
+        if ln and ln[0] != "#"
+    ]
+    assert lines.index("*.png") > lines.index("deploy/**")
