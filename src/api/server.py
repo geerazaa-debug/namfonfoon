@@ -1,4 +1,4 @@
-"""FastAPI app: LINE webhook + B2B risk/routing API + background rain poller + citizen report map + route check.
+"""FastAPI app: LINE webhook + B2B risk/routing API + rain poller + citizen report map + route check + PM2.5.
 
 Subscribers, rain history and alert cooldowns persist in SQLite (`storage.db_path`, or env
 FLOODWATCH_DB). One process only: the poller must not run in several workers at once.
@@ -23,16 +23,19 @@ from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Re
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, ValidationError
 
+from src.alerts import air_messages as am
 from src.alerts import report_messages as rm
 from src.alerts import route_messages as rtm
 from src.alerts.dispatcher import AlertPipeline, CooldownTracker, default_fetch
 from src.alerts.line_login import InvalidIdToken, verify_id_token
 from src.alerts.line_notifier import LineNotifier, verify_signature
 from src.config import risk_thresholds, settings
+from src.data.air4thai import AirStation, fetch_air
 from src.data.db import Database
 from src.data.osrm import fetch_route
 from src.data.thaiwater_rain import RainAccumulator
 from src.data.validator import BoundingBox, GeoPoint
+from src.engine.air import AirBand, air_bands, air_on_route, nearest_air
 from src.engine.community import MapReport, ReportLevel, map_view, report_levels
 from src.engine.districts import district_index
 from src.engine.geofence import FloodZone, ZoneHit, zones_near_point, zones_on_route
@@ -45,6 +48,7 @@ analyzer = RuleBasedAnalyzer()
 ZONES: dict[str, FloodZone] = {}
 pipeline: AlertPipeline | None = None
 _db: Database | None = None
+_air_cache: tuple[datetime, list[AirStation]] | None = None
 ROOT = Path(__file__).resolve().parents[2]
 STATIC = Path(__file__).resolve().parent / "static"
 
@@ -95,7 +99,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
             pipeline = None
 
 
-app = FastAPI(title="FloodWatch Rain Advisory", version="0.4.0", lifespan=lifespan)
+app = FastAPI(title="FloodWatch Rain Advisory", version="0.5.0", lifespan=lifespan)
 
 
 def require_api_key(x_api_key: str = Header(default="")) -> None:
@@ -219,6 +223,55 @@ def public_rain() -> PublicRainView:
     return PublicRainView(generated_at=now, classes=classes, stations=stations)
 
 
+async def air_stations(now: datetime) -> list[AirStation] | None:
+    """Air4Thai snapshot shared by all users for `cache_min`; the last copy (or None) when a fetch fails."""
+    global _air_cache
+    if _air_cache and now - _air_cache[0] < timedelta(minutes=settings()["air_quality"]["cache_min"]):
+        return _air_cache[1]
+    try:
+        stations = await fetch_air()
+    except (httpx.HTTPError, ValidationError, ValueError) as exc:
+        log.warning("Air4Thai fetch failed: %s", type(exc).__name__)
+        return _air_cache[1] if _air_cache else None
+    _air_cache = (now, stations)
+    return stations
+
+
+class PublicAir(BaseModel):
+    lat: float
+    lon: float
+    name: str
+    pm25: float
+    band: int
+    minutes_ago: int
+
+
+class PublicAirView(BaseModel):
+    generated_at: datetime
+    bands: list[AirBand]  # map legend, cleanest first
+    stations: list[PublicAir]
+
+
+@app.get("/v1/public/air")
+async def public_air() -> PublicAirView:
+    """Latest PM2.5 at every fresh Air4Thai station (nationwide, includes BMA sensors)."""
+    now = datetime.now(UTC)
+    max_age = timedelta(minutes=settings()["air_quality"]["max_age_min"])
+    stations = [
+        PublicAir(
+            lat=s.location.lat,
+            lon=s.location.lon,
+            name=s.name,
+            pm25=s.pm25,
+            band=s.band,
+            minutes_ago=int((now - s.observed_at).total_seconds() // 60),
+        )
+        for s in await air_stations(now) or []
+        if now - max_age <= s.observed_at
+    ]
+    return PublicAirView(generated_at=now, bands=list(air_bands().values()), stations=stations)
+
+
 class AppConfig(BaseModel):
     liff_id: str | None
     report_url: str | None  # opens the LIFF report page inside LINE
@@ -303,8 +356,8 @@ async def send_reply(reply_token: str, messages: list[dict[str, Any]]) -> None:
         log.exception("LINE reply failed")
 
 
-async def run_route_check(a: GeoPoint, b: GeoPoint, now: datetime) -> tuple[RouteCheck, bool]:
-    """(check, straight_line). Falls back to the straight line when OSRM fails or finds no road."""
+async def run_route_check(a: GeoPoint, b: GeoPoint, now: datetime) -> tuple[list[GeoPoint], RouteCheck, bool]:
+    """(route, check, straight_line). Falls back to the straight line when OSRM fails or finds no road."""
     cfg = settings()["route_check"]
     try:
         path = await fetch_route(a, b)
@@ -326,7 +379,7 @@ async def run_route_check(a: GeoPoint, b: GeoPoint, now: datetime) -> tuple[Rout
         district_of=district_index().locate,
     )
     log.info("route check verdict=%s", check.verdict)  # never log points
-    return check, path is None
+    return route, check, path is None
 
 
 async def route_step(user_id: str, loc: GeoPoint, now: datetime) -> list[dict[str, Any]] | None:
@@ -344,15 +397,37 @@ async def route_step(user_id: str, loc: GeoPoint, now: datetime) -> list[dict[st
         db.set_route_origin(user_id, loc, now, cfg["coord_decimals"])
         return [rtm.ask_destination()]
     db.clear_pending_route(user_id)
-    check, straight = await run_route_check(pending.origin, loc, now)
+    route, check, straight = await run_route_check(pending.origin, loc, now)
+    air_cfg = settings()["air_quality"]
+    air = air_on_route(
+        route,
+        await air_stations(now) or [],
+        now,
+        buffer_km=air_cfg["route_buffer_km"],
+        max_age=timedelta(minutes=air_cfg["max_age_min"]),
+    )
+    air_line = am.route_line(air, air_bands()[air.worst.band]) if air else None
     map_url = settings()["community_reports"]["public_map_url"]
-    return [rtm.result(check, straight_line=straight, map_url=map_url, a=pending.origin, b=loc)]
+    return [rtm.result(check, straight_line=straight, map_url=map_url, a=pending.origin, b=loc, air_line=air_line)]
+
+
+async def air_reply(loc: GeoPoint, now: datetime, *, at_home: bool) -> list[dict[str, Any]]:
+    cfg = settings()["air_quality"]
+    stations = await air_stations(now)
+    if stations is None:
+        return [am.unavailable()]
+    near = nearest_air(loc, stations, now, max_km=cfg["nearest_max_km"], max_age=timedelta(minutes=cfg["max_age_min"]))
+    if near is None:
+        return [am.none_nearby(cfg["nearest_max_km"])]
+    log.info("air lookup band=%d", near.station.band)  # never log points
+    return [am.result(near, air_bands()[near.station.band], cfg["sensitive_group"], at_home=at_home)]
 
 
 async def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]]:
     """Apply one webhook event; returns the reply messages (possibly none)."""
     cfg = settings()["community_reports"]
     route_cfg = settings()["route_check"]
+    air_cfg = settings()["air_quality"]
     levels = report_levels()
     user_id = ev.get("source", {}).get("userId")
     if not user_id:
@@ -360,7 +435,7 @@ async def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]
     db = get_db()
     kind, msg = ev.get("type"), ev.get("message", {})
     if kind == "unfollow":
-        db.delete_user(user_id)  # also cooldowns + pending report; anonymizes past reports
+        db.delete_user(user_id)  # also cooldowns + pending step; anonymizes past reports
         return []
     text = msg.get("text", "").strip() if kind == "message" and msg.get("type") == "text" else None
     if text in cfg["trigger_texts"]:
@@ -370,6 +445,11 @@ async def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]
         db.anonymize_reports(now - timedelta(hours=cfg["ttl_hours"]))  # also drops stale pending steps
         db.start_route(user_id, now)
         return [rtm.ask_origin(route_cfg["pending_ttl_min"])]
+    air_text = text is not None and text.lower().replace(" ", "") in air_cfg["trigger_texts"]
+    if air_text or data == am.POSTBACK_START:
+        db.start_air(user_id, now)  # "check elsewhere" button shares a location next
+        home = db.user_location(user_id)
+        return await air_reply(home, now, at_home=True) if home else [am.ask_location(air_cfg["pending_ttl_min"])]
     if data is not None:
         key = data.removeprefix(rm.POSTBACK_PREFIX) if data.startswith(rm.POSTBACK_PREFIX) else None
         if key == "start":  # rich-menu button
@@ -383,6 +463,9 @@ async def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]
         level = db.pop_pending_report(user_id, now - timedelta(minutes=cfg["pending_ttl_min"]))
         if level is None and (route_reply := await route_step(user_id, loc, now)) is not None:
             return route_reply
+        if level is None and db.air_pending(user_id, now - timedelta(minutes=air_cfg["pending_ttl_min"])):
+            db.start_air(user_id, now)
+            return await air_reply(loc, now, at_home=False)
         if level is None:  # plain location share = alert subscription (home area)
             db.upsert_user(user_id, loc, district_name(loc), now)
             log.info("registered location for subscriber")  # never log userId/coords

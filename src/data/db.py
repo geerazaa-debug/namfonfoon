@@ -6,7 +6,8 @@ User coordinates are stored rounded to 0.01 deg (~1.1 km): enough to pick rain s
 5 km, without keeping an exact home location.
 Citizen reports keep the reporter's LINE userId only while the report is live (rate limit and
 distinct-reporter counting); `anonymize_reports` and `delete_user` null it afterwards.
-A route check holds the coarse start point only until the destination arrives (`pending_routes`).
+`pending_steps` holds what a user's next shared location means (one row per user, so the latest intent wins):
+a report level, a route check (with its coarse start point once shared) or a PM2.5 lookup.
 """
 
 from __future__ import annotations
@@ -77,6 +78,18 @@ _MIGRATIONS = {
         origin_lon   REAL,
         created_at   TEXT NOT NULL
     );
+    """,
+    4: """
+    CREATE TABLE pending_steps (
+        line_user_id TEXT PRIMARY KEY,
+        kind         TEXT NOT NULL,           -- report | route | air
+        level        TEXT,                    -- report: the picked level
+        lat          REAL,                    -- route: start point once shared (rounded)
+        lon          REAL,
+        created_at   TEXT NOT NULL
+    );
+    DROP TABLE pending_reports;
+    DROP TABLE pending_routes;
     """,
 }
 SCHEMA_VERSION = max(_MIGRATIONS)
@@ -213,12 +226,15 @@ class Database:
         )
 
     def delete_user(self, user_id: str) -> None:
-        """Unfollow: drop subscription, cooldowns, pending report/route; keep past reports but anonymized."""
+        """Unfollow: drop subscription, cooldowns, pending step; keep past reports but anonymized."""
         self._write("DELETE FROM users WHERE line_user_id=?", [(user_id,)])
         self.delete_cooldowns(user_id)
-        self._write("DELETE FROM pending_reports WHERE line_user_id=?", [(user_id,)])
-        self.clear_pending_route(user_id)
+        self.clear_step(user_id)
         self._write("UPDATE community_reports SET reporter=NULL WHERE reporter=?", [(user_id,)])
+
+    def user_location(self, user_id: str) -> GeoPoint | None:
+        rows = self._query("SELECT lat, lon FROM users WHERE line_user_id=?", (user_id,))
+        return GeoPoint(lat=rows[0][0], lon=rows[0][1]) if rows else None
 
     def users(self) -> dict[str, GeoPoint]:
         return {r[0]: GeoPoint(lat=r[1], lon=r[2]) for r in self._query("SELECT line_user_id, lat, lon FROM users")}
@@ -226,23 +242,38 @@ class Database:
     def user_count(self) -> int:
         return int(self._query("SELECT COUNT(*) FROM users")[0][0])
 
+    # ---- pending steps: what the next shared location means ----
+    def _set_step(self, user_id: str, kind: str, now: datetime, level: str | None = None) -> None:
+        self._write(
+            "INSERT INTO pending_steps VALUES (?,?,?,NULL,NULL,?) ON CONFLICT(line_user_id) DO UPDATE SET "
+            "kind=excluded.kind, level=excluded.level, lat=NULL, lon=NULL, created_at=excluded.created_at",
+            [(user_id, kind, level, ts(now))],
+        )
+
+    def _step(self, user_id: str, kind: str, since: datetime) -> sqlite3.Row | None:
+        """The user's pending step if it is `kind`; an expired one is dropped, another kind is left alone."""
+        rows = self._query("SELECT * FROM pending_steps WHERE line_user_id=?", (user_id,))
+        if not rows or rows[0]["kind"] != kind:
+            return None
+        if rows[0]["created_at"] < ts(since):
+            self.clear_step(user_id)
+            return None
+        return rows[0]
+
+    def clear_step(self, user_id: str) -> None:
+        self._write("DELETE FROM pending_steps WHERE line_user_id=?", [(user_id,)])
+
     # ---- community reports ----
     def set_pending_report(self, user_id: str, level: str, now: datetime) -> None:
-        """Starting a report cancels a half-done route check, so the next location is unambiguous."""
-        self.clear_pending_route(user_id)
-        self._write(
-            "INSERT INTO pending_reports VALUES (?,?,?) ON CONFLICT(line_user_id) DO UPDATE SET "
-            "level=excluded.level, created_at=excluded.created_at",
-            [(user_id, level, ts(now))],
-        )
+        self._set_step(user_id, "report", now, level)
 
     def pop_pending_report(self, user_id: str, since: datetime) -> str | None:
         """The level picked since `since`, consumed so one location makes one report."""
-        rows = self._query("SELECT level, created_at FROM pending_reports WHERE line_user_id=?", (user_id,))
-        if not rows:
+        row = self._step(user_id, "report", since)
+        if row is None:
             return None
-        self._write("DELETE FROM pending_reports WHERE line_user_id=?", [(user_id,)])
-        return rows[0][0] if rows[0][1] >= ts(since) else None
+        self.clear_step(user_id)
+        return row["level"]
 
     def add_report(
         self, reporter: str, level: str, location: GeoPoint, district: str, now: datetime, decimals: int
@@ -280,37 +311,33 @@ class Database:
             "UPDATE community_reports SET reporter=NULL WHERE reported_at<? AND reporter IS NOT NULL",
             [(ts(older_than),)],
         )
-        self._write("DELETE FROM pending_reports WHERE created_at<?", [(ts(older_than),)])
-        self._write("DELETE FROM pending_routes WHERE created_at<?", [(ts(older_than),)])
+        self._write("DELETE FROM pending_steps WHERE created_at<?", [(ts(older_than),)])
 
     # ---- route checks ----
     def start_route(self, user_id: str, now: datetime) -> None:
-        """Waiting for the start point; cancels a half-done report."""
-        self._write("DELETE FROM pending_reports WHERE line_user_id=?", [(user_id,)])
-        self._write(
-            "INSERT INTO pending_routes VALUES (?,NULL,NULL,?) ON CONFLICT(line_user_id) DO UPDATE SET "
-            "origin_lat=NULL, origin_lon=NULL, created_at=excluded.created_at",
-            [(user_id, ts(now))],
-        )
+        """Waiting for the start point."""
+        self._set_step(user_id, "route", now)
 
     def set_route_origin(self, user_id: str, origin: GeoPoint, now: datetime, decimals: int) -> None:
         self._write(
-            "UPDATE pending_routes SET origin_lat=?, origin_lon=?, created_at=? WHERE line_user_id=?",
+            "UPDATE pending_steps SET lat=?, lon=?, created_at=? WHERE line_user_id=? AND kind='route'",
             [(round(origin.lat, decimals), round(origin.lon, decimals), ts(now), user_id)],
         )
 
     def pending_route(self, user_id: str, since: datetime) -> PendingRoute | None:
-        """The route check in progress, if its last step was since `since`; an expired one is dropped."""
-        rows = self._query(
-            "SELECT origin_lat, origin_lon, created_at FROM pending_routes WHERE line_user_id=?", (user_id,)
-        )
-        if not rows:
+        """The route check in progress, if its last step was since `since`."""
+        row = self._step(user_id, "route", since)
+        if row is None:
             return None
-        if rows[0][2] < ts(since):
-            self.clear_pending_route(user_id)
-            return None
-        lat, lon = rows[0][0], rows[0][1]
-        return PendingRoute(origin=None if lat is None else GeoPoint(lat=lat, lon=lon))
+        return PendingRoute(origin=None if row["lat"] is None else GeoPoint(lat=row["lat"], lon=row["lon"]))
 
     def clear_pending_route(self, user_id: str) -> None:
-        self._write("DELETE FROM pending_routes WHERE line_user_id=?", [(user_id,)])
+        self._write("DELETE FROM pending_steps WHERE line_user_id=? AND kind='route'", [(user_id,)])
+
+    # ---- PM2.5 lookups ----
+    def start_air(self, user_id: str, now: datetime) -> None:
+        self._set_step(user_id, "air", now)
+
+    def air_pending(self, user_id: str, since: datetime) -> bool:
+        """The user asked for PM2.5 since `since`. Not consumed: "check elsewhere" shares stay lookups."""
+        return self._step(user_id, "air", since) is not None

@@ -69,7 +69,15 @@ def map_link(map_url: str, a: GeoPoint, b: GeoPoint) -> str:
     return f"{map_url}#from={a.lat:.3f},{a.lon:.3f}&to={b.lat:.3f},{b.lon:.3f}"
 
 
-def result(check: RouteCheck, *, straight_line: bool, map_url: str, a: GeoPoint, b: GeoPoint) -> dict[str, Any]:
+def result(
+    check: RouteCheck,
+    *,
+    straight_line: bool,
+    map_url: str,
+    a: GeoPoint,
+    b: GeoPoint,
+    air_line: str | None = None,
+) -> dict[str, Any]:
     head = "🚗 ระยะตรง" if straight_line else "🚗 เส้นทางรถยนต์"
     lines = [f"{head} {check.distance_km:.1f} กม.", _HEADLINE[check.verdict]]
     if straight_line:
@@ -82,6 +90,8 @@ def result(check: RouteCheck, *, straight_line: bool, map_url: str, a: GeoPoint,
         ]
     elif check.stations_checked:
         lines += ["", f"🌤️ สถานีวัดฝนใกล้เส้นทาง {check.stations_checked} แห่ง: ไม่มีฝน"]
+    if air_line:
+        lines += ["", air_line]
     if check.reports:
         lines += ["", "🌊 รายงานน้ำจากประชาชน"]
         for x in check.reports[:MAX_REPORT_LINES]:

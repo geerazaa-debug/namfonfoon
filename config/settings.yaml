@@ -85,3 +85,38 @@ route_check:
     - {key: moderate, min_mm: 5, emoji: "🌧️", label: "ฝนปานกลาง"}
     - {key: heavy, min_mm: 10, emoji: "⛈️", label: "ฝนหนัก"}
     - {key: very_heavy, min_mm: 30, emoji: "🚨", label: "ฝนหนักมาก"}
+
+# PM2.5 via LINE ("ฝุ่น"), in route checks and on /map. Air4Thai (Pollution Control Department) already
+# includes BMA's own sensors (stationType "BKK"): 59 Bangkok stations on 2026-10-16. Licence not stated:
+# attribute, non-commercial public use only. Nationwide: unlike reports, nothing here is Bangkok-specific.
+air_quality:
+  url: https://air4thai.pcd.go.th/services/getNewAQI_JSON.php
+  extra_ca: ca/letsencrypt_yr.pem   # under config/: their server sends a broken chain (checked 2026-10-16)
+  timeout_s: 20
+  max_retries: 2
+  cache_min: 10                # Air4Thai updates hourly; one fetch serves every user this long
+  max_age_min: 180             # stations whose latest reading is older are ignored
+  nearest_max_km: 15           # no fresh station this close -> say so
+  route_buffer_km: 2
+  pending_ttl_min: 10
+  trigger_texts: ["ฝุ่น", "ค่าฝุ่น", "pm2.5", "pm25", "ฝุ่นpm2.5"]   # matched lower-cased, spaces removed
+  # Band = Air4Thai's own PM25 color_id per station (Thai AQI, PCD announcement B.E. 2566 / 2023:
+  # PM2.5 0-15 / 15.1-25 / 25.1-37.5 / 37.6-75 / >75 ug/m3). Advice is a plain-language summary of PCD's
+  # guidance; check it against the official announcement before launch.
+  sensitive_group: "เด็ก ผู้สูงอายุ คนท้อง และผู้มีโรคประจำตัว"
+  bands:
+    - {id: 1, emoji: "🔵", label: "ดีมาก", color: "#3BCCFF",
+       general: "อากาศดีมาก ทำกิจกรรมกลางแจ้งได้เต็มที่",
+       sensitive: "ทำกิจกรรมกลางแจ้งได้ตามปกติ"}
+    - {id: 2, emoji: "🟢", label: "ดี", color: "#92D050",
+       general: "ทำกิจกรรมกลางแจ้งได้ตามปกติ",
+       sensitive: "ทำกิจกรรมกลางแจ้งได้ตามปกติ"}
+    - {id: 3, emoji: "🟡", label: "ปานกลาง", color: "#FFD600",
+       general: "ทำกิจกรรมกลางแจ้งได้ตามปกติ",
+       sensitive: "ถ้ามีอาการ เช่น ไอ หายใจลำบาก แสบตา ให้ลดเวลาอยู่กลางแจ้ง"}
+    - {id: 4, emoji: "🟠", label: "เริ่มมีผลต่อสุขภาพ", color: "#FFA200",
+       general: "ลดเวลาอยู่กลางแจ้ง ถ้าต้องออกไปให้ใส่หน้ากากกันฝุ่น (เช่น N95)",
+       sensitive: "ลดหรืองดกิจกรรมกลางแจ้ง ใส่หน้ากากกันฝุ่น ถ้าไอ แน่นหน้าอก หรือหายใจลำบาก ให้รีบพบแพทย์"}
+    - {id: 5, emoji: "🔴", label: "มีผลต่อสุขภาพ", color: "#F04646",
+       general: "งดกิจกรรมกลางแจ้ง อยู่ในอาคารและปิดหน้าต่าง ถ้าต้องออกไปให้ใส่หน้ากากกันฝุ่น",
+       sensitive: "อยู่ในอาคาร ใช้เครื่องฟอกอากาศถ้ามี ถ้ามีอาการผิดปกติให้รีบพบแพทย์"}

@@ -42,6 +42,9 @@
   .routebar { display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;
     background:#f3e5f5; color:#4a148c; padding:8px 16px; font-size:1rem; }
   .routebar button { min-height:40px; padding:6px 12px; font-size:.95rem; border-color:#6a1b9a; color:#6a1b9a; background:transparent; }
+  .aq { display:flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:50%;
+    border:3px solid #fff; color:#111; font-weight:700; font-size:16px; box-shadow:0 2px 6px rgba(0,0,0,.4); }
+  .leaflet-control-layers { font-family:"Sarabun", system-ui, sans-serif; font-size:16px; }
   .flag { font-size:30px; filter:drop-shadow(0 2px 3px rgba(0,0,0,.45)); }
   .empty { position:absolute; z-index:500; left:50%; top:16px; transform:translateX(-50%); background:var(--card);
     color:var(--fg); padding:10px 16px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.25); max-width:90%; text-align:center; }
@@ -50,7 +53,7 @@
 <body>
 <header>
   <h1>🌊 น้ำถึงไหนแล้ว?</h1>
-  <div class="sub">รายงานน้ำท่วมจากคนในพื้นที่ และฝนจากสถานีวัด กรุงเทพฯ · อัปเดต <span id="updated">-</span></div>
+  <div class="sub">น้ำท่วมจากคนในพื้นที่ ฝน และฝุ่น PM2.5 จากสถานีวัด กรุงเทพฯ · อัปเดต <span id="updated">-</span></div>
 </header>
 <div class="offline" id="offline" hidden>📴 ออฟไลน์อยู่ กำลังแสดงข้อมูลล่าสุดที่โหลดไว้</div>
 <div class="routebar" id="routebar" hidden>
@@ -61,15 +64,17 @@
 <div class="bar">
   <div class="legend" id="legend"></div>
   <div class="legend"><span><i class="dot" style="background:#42a5f5;border:2px solid #1565c0"></i>🌧️ ฝนที่สถานีวัด</span></div>
+  <div class="legend" id="airLegend"></div>
   <button id="me" type="button">📍 ตำแหน่งของฉัน</button>
   <button id="report" class="primary" type="button" hidden>🌊 รายงานน้ำ</button>
   <button id="install" type="button" hidden>📲 เพิ่มลงหน้าจอ</button>
 </div>
 <div class="how">อยากช่วยรายงาน? แอดไลน์ FloodWatch แล้วพิมพ์ <b>รายงานน้ำ</b> กดเลือก 2 ครั้งก็เสร็จ ·
-  จะออกเดินทาง? พิมพ์ <b>เช็คเส้นทาง</b> ดูฝนและน้ำตลอดทาง</div>
+  จะออกเดินทาง? พิมพ์ <b>เช็คเส้นทาง</b> ดูฝน น้ำ และฝุ่นตลอดทาง · พิมพ์ <b>ฝุ่น</b> ดูค่า PM2.5 ใกล้ตัว</div>
 <div class="how" id="iosHint" hidden>📲 ใช้บ่อย? กดปุ่ม <b>แชร์</b> ของ Safari แล้วเลือก <b>เพิ่มไปยังหน้าจอโฮม</b></div>
 <div class="note">ข้อมูลเป็นรายงานจากประชาชน ยังไม่ได้ตรวจสอบโดยหน่วยงาน · ขอบเส้นประ = มีผู้รายงานคนเดียว ·
   รายงานหายไปเองหลัง <span id="ttl">3</span> ชม. · วงกลมสีฟ้า = ฝนที่วัดได้ในชั่วโมงล่าสุด (ThaiWater) ·
+  ตัวเลขในวงกลมสี = ฝุ่น PM2.5 (มคก./ลบ.ม.) จากกรมควบคุมมลพิษ (Air4Thai) รวมสถานีของ กทม. ·
   เส้นทางจาก OSRM · แผนที่ © OpenStreetMap contributors</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -93,6 +98,8 @@ L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
 const layer = L.layerGroup().addTo(map);
 const rainLayer = L.layerGroup().addTo(map);
 const routeLayer = L.layerGroup().addTo(map);
+const airLayer = L.layerGroup().addTo(map);
+L.control.layers(null, { "🌊 รายงานน้ำ": layer, "🌧️ ฝน": rainLayer, "😷 ฝุ่น PM2.5": airLayer }, { collapsed: false }).addTo(map);
 let osrmUrl = null;
 
 function ago(m) { return m < 1 ? "เมื่อสักครู่" : m < 60 ? `${m} นาทีที่แล้ว` : `${Math.floor(m / 60)} ชม. ${m % 60} นาทีที่แล้ว`; }
@@ -157,6 +164,45 @@ async function loadRain() {
   } catch (e) { /* rain layer is optional */ }
 }
 
+function airPopup(s, band) {
+  const d = document.createElement("div");
+  const head = document.createElement("div");
+  head.style.fontWeight = "700"; head.style.fontSize = "1.15em";
+  head.textContent = `${band.emoji} PM2.5 ${Math.round(s.pm25)} มคก./ลบ.ม. · ${band.label}`;
+  const meta = document.createElement("div");
+  meta.textContent = `${s.name} · วัดเมื่อ ${ago(s.minutes_ago)}`;
+  const tip = document.createElement("div");
+  tip.style.marginTop = "6px";
+  tip.textContent = band.general;
+  d.append(head, meta, tip);
+  return d;
+}
+
+async function loadAir() {
+  try {
+    const data = await (await fetch("/v1/public/air", { cache: "no-store" })).json();
+    const bands = Object.fromEntries(data.bands.map((b) => [b.id, b]));
+    const legend = document.getElementById("airLegend");
+    legend.replaceChildren();
+    for (const b of data.bands) {
+      const s = document.createElement("span");
+      const dot = document.createElement("i");
+      dot.className = "dot"; dot.style.background = b.color;
+      s.append(dot, b.label);
+      legend.append(s);
+    }
+    airLayer.clearLayers();
+    for (const s of data.stations) {
+      const b = bands[s.band];
+      const icon = L.divIcon({
+        className: "", iconSize: [40, 40], iconAnchor: [20, 20],
+        html: `<div class="aq" style="background:${b.color}">${Math.round(s.pm25)}</div>`,
+      });
+      L.marker([s.lat, s.lon], { icon, title: `PM2.5 ${Math.round(s.pm25)}` }).bindPopup(airPopup(s, b)).addTo(airLayer);
+    }
+  } catch (e) { /* air layer is optional */ }
+}
+
 function routeFromHash() {
   const h = new URLSearchParams(location.hash.slice(1));
   const pt = (v) => {
@@ -207,7 +253,8 @@ document.getElementById("me").addEventListener("click", () => {
 
 load();
 loadRain();
-setInterval(() => { load(); loadRain(); }, 120000);
+loadAir();
+setInterval(() => { load(); loadRain(); loadAir(); }, 120000);
 
 fetch("/v1/public/app-config").then((r) => r.json()).then((cfg) => {
   osrmUrl = cfg.osrm_url;
@@ -220,7 +267,7 @@ fetch("/v1/public/app-config").then((r) => r.json()).then((cfg) => {
 
 if ("serviceWorker" in navigator) {
   // First visit: the worker takes control after the first fetch; refetch so offline has a copy.
-  navigator.serviceWorker.addEventListener("controllerchange", () => { load(); loadRain(); }, { once: true });
+  navigator.serviceWorker.addEventListener("controllerchange", () => { load(); loadRain(); loadAir(); }, { once: true });
   navigator.serviceWorker.register("/sw.js").catch(() => {});
 }
 let installEvt = null;

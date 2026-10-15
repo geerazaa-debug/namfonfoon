@@ -33,6 +33,7 @@ cp .env.example .env   # fill in values
 | POST | `/v1/route/check` | `X-API-Key` | Does a route polyline cross any risk zone? |
 | GET | `/v1/public/reports` | — | Live citizen water reports (no reporter identity) |
 | GET | `/v1/public/rain` | — | Last hour's rain at wet ThaiWater gauges (empty unless the poller runs) |
+| GET | `/v1/public/air` | — | Latest PM2.5 at every fresh Air4Thai station (nationwide) |
 | GET | `/map` | — | Public map of citizen reports + gauge rain; `#from=lat,lon&to=lat,lon` draws a checked route (Thai, large type, mobile-first, installable PWA, works offline) |
 | GET | `/report` | LIFF login | Report page that opens inside LINE (big buttons + map pin) |
 | POST | `/v1/reports` | LINE ID token (`Authorization: Bearer`) | Submit a report from the LIFF page |
@@ -95,6 +96,23 @@ fresh gauge is near the route. It is measured rain and public reports, not a for
   logged, and the map link carries them in the `#fragment`, which browsers do not send to the server: `/map` asks OSRM
   for the line itself.
 - Settings: `route_check` in `config/settings.yaml`.
+
+## PM2.5 ("ฝุ่น")
+Type **ฝุ่น** / **PM2.5** (or rich-menu postback `air=start`). A subscriber gets their home area at once; anyone can tap
+**📍 ส่งตำแหน่ง** / **📍 เช็คที่อื่น** to check any place. The reply gives the nearest fresh station (≤ 15 km, ≤ 3 h old),
+its value and band, and plain advice for everyone and for children, the elderly, pregnant people and the chronically ill.
+Route checks add the worst PM2.5 station within 2 km of the route. `/map` shows every station as a coloured number.
+
+- Source: Air4Thai (Pollution Control Department) `getNewAQI_JSON.php`, one nationwide JSON, hourly. It already includes
+  BMA's own sensors (`stationType` "BKK"): 59 Bangkok stations and 141 fresh of 170 nationwide on 2026-10-16. Fetched on
+  demand, cached 10 min for all users; on a failed fetch the last copy is used.
+- Band = Air4Thai's own PM25 `color_id` (Thai AQI, PCD 2566/2023: 0-15 / 15.1-25 / 25.1-37.5 / 37.6-75 / >75 µg/m³), so
+  the thresholds are PCD's. The advice text in `air_quality.bands` is our plain-language summary of PCD guidance: check it
+  against the official announcement before launch.
+- **TLS:** Air4Thai's server sends the wrong chain (Sectigo intermediate for a Let's Encrypt leaf), and certifi lacks
+  Let's Encrypt's new Root YR. `config/ca/letsencrypt_yr.pem` ships the public YR1 intermediate + Root YR cross-signed by
+  ISRG Root X1 (valid to 2028/2032), loaded on top of certifi. Never `verify=False`.
+- Licence: not stated. Attribute PCD, public non-commercial use only. Nationwide on purpose (Chiang Mai haze season).
 
 ## Deploy
 Free always-on hosting on Oracle Cloud: see [`docs/DEPLOY.md`](docs/DEPLOY.md) and `deploy/`.
