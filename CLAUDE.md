@@ -47,3 +47,9 @@ Rule-based heavy-rain advisory for Bangkok districts (rain thresholds + BMA DDS 
 - `.claude/agents/builder.md` — implements a scoped feature with tests
 - `.claude/agents/refuter.md` — bug + secrets/security audit; run before every commit
 - `/build-feature <description>` runs scout → builder → refuter
+
+## Explainer figures (optional tool)
+- Anatomy skill (github.com/wheresryan22/anatomy, MIT, needs Node 20.10+ and Chrome) makes interactive isometric SVG figures; fits explainers like a water-level gauge for the alert levels
+- Start small (examples/dial-indicator, ~300 lines): big figures burn credits shared with RiskRail
+- Never run its `scripts/publish.mjs`: it reads the Claude Code session log and opens a PR from the user's gh account
+- Not installed yet; a figure that goes on `/map` or a post must not show uncalibrated risk numbers as fact (risk model is a heuristic)
