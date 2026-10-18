@@ -9,7 +9,8 @@ Group=floodwatch
 WorkingDirectory=/opt/floodwatch
 EnvironmentFile=/etc/floodwatch.env
 # One worker only: the rain poller runs in-process (see src/api/server.py).
-ExecStart=/opt/floodwatch/.venv/bin/uvicorn src.api.server:app --host 127.0.0.1 --port 8000 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1
+# python -m, not the uvicorn script: setup.sh builds the venv in floodwatch.new, so script shebangs point there.
+ExecStart=/opt/floodwatch/.venv/bin/python -m uvicorn src.api.server:app --host 127.0.0.1 --port 8000 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1
 Restart=always
 RestartSec=5
 NoNewPrivileges=true
