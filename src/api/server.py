@@ -601,6 +601,14 @@ async def air_reply(loc: GeoPoint, now: datetime, *, at_home: bool) -> list[dict
     return [am.result(near, air_bands()[near.station.band], cfg["sensitive_group"], at_home=at_home)]
 
 
+_QUOTES = str.maketrans("", "", "\"'“”‘’「」 \t\n")
+
+
+def command(t: str) -> str:
+    """Typed text as a command key: quotes and spaces dropped, lower-cased ("“ข้อมูล ของฉัน”" -> "ข้อมูลของฉัน")."""
+    return t.translate(_QUOTES).lower()
+
+
 async def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]]:
     """Apply one webhook event; returns the reply messages (possibly none)."""
     cfg = settings()["community_reports"]
@@ -618,13 +626,17 @@ async def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]
         return []
     if kind == "follow":  # replaces the console greeting message: turn that off
         return [hm.welcome(project["name"], public_url("/privacy"))]
-    text = msg.get("text", "").strip() if kind == "message" and msg.get("type") == "text" else None
+    text = command(msg.get("text", "")) if kind == "message" and msg.get("type") == "text" else None
     data = ev.get("postback", {}).get("data", "") if kind == "postback" else None
-    if text in project["help_texts"] or data == hm.POSTBACK_HELP:
+
+    def said(key: list[str]) -> bool:
+        return text is not None and text in {command(t) for t in key}
+
+    if said(project["help_texts"]) or data == hm.POSTBACK_HELP:
         return [hm.help_reply(project["name"], public_url("/privacy"))]
-    if text in project["my_data_texts"]:
+    if said(project["my_data_texts"]):
         return [hm.my_data(db.user_data(user_id, now - timedelta(hours=cfg["ttl_hours"])))]
-    if text in project["delete_texts"]:
+    if said(project["delete_texts"]):
         return [hm.confirm_delete()]
     if data == hm.POSTBACK_DELETE:
         db.delete_user(user_id)
@@ -635,18 +647,17 @@ async def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]
     if data == hm.POSTBACK_HOME:
         db.clear_step(user_id)  # so the next shared location is the home location
         return [hm.ask_home()]
-    if text in cfg["trigger_texts"]:
+    if said(cfg["trigger_texts"]):
         return [rm.ask_level(levels)]
-    if text in route_cfg["trigger_texts"] or data == rtm.POSTBACK_START:
+    if said(route_cfg["trigger_texts"]) or data == rtm.POSTBACK_START:
         db.anonymize_reports(now - timedelta(hours=cfg["ttl_hours"]))  # also drops stale pending steps
         db.start_route(user_id, now)
         return [rtm.ask_origin(route_cfg["pending_ttl_min"])]
-    air_text = text is not None and text.lower().replace(" ", "") in air_cfg["trigger_texts"]
-    if air_text or data == am.POSTBACK_START:
+    if said(air_cfg["trigger_texts"]) or data == am.POSTBACK_START:
         db.start_air(user_id, now)  # "check elsewhere" button shares a location next
         home = db.user_location(user_id)
         return await air_reply(home, now, at_home=True) if home else [am.ask_location(air_cfg["pending_ttl_min"])]
-    if text in settings()["river_level"]["trigger_texts"] or data == rvm.POSTBACK_START:
+    if said(settings()["river_level"]["trigger_texts"]) or data == rvm.POSTBACK_START:
         return await river_reply(db.user_location(user_id), now)
     if data is not None:
         key = data.removeprefix(rm.POSTBACK_PREFIX) if data.startswith(rm.POSTBACK_PREFIX) else None
@@ -675,6 +686,8 @@ async def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]
         if outcome.status == "rate_limited":
             return [rm.too_many(cfg["max_reports_per_hour"])]
         return [rm.thanks(levels[level], outcome.district or "", public_url("/map"))]
+    if text:  # silence looks like a broken bot; replies are free
+        return [hm.not_understood()]
     return []
 
 

@@ -30,6 +30,16 @@ def test_help_without_public_url_has_no_link(line, monkeypatch):  # noqa: F811
     assert "นโยบายความเป็นส่วนตัว" not in h["text"] and "ลบข้อมูลของฉัน" in h["text"]
 
 
+def test_commands_ignore_quotes_spaces_and_case_and_unknown_text_gets_a_hint(line):  # noqa: F811
+    _, send = line
+    [mine] = send({"type": "message", "message": {"type": "text", "text": "“ข้อมูล ของฉัน”"}})
+    assert mine["text"].startswith("🔒 ข้อมูลของคุณ")
+    [h] = send({"type": "message", "message": {"type": "text", "text": " HELP "}})
+    assert "ลบข้อมูลของฉัน" in h["text"]
+    assert send({"type": "message", "message": {"type": "text", "text": "ข้อมูลข้องฉัน"}}) == [hm.not_understood()]
+    assert send({"type": "message", "message": {"type": "sticker"}}) == []
+
+
 def test_my_data_then_delete_everything(line, memory_db):  # noqa: F811
     _, send = line
     _, normal = hotspot_and_normal()

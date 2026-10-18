@@ -106,5 +106,9 @@ def deleted() -> dict[str, Any]:
     )
 
 
+def not_understood() -> dict[str, Any]:
+    return _text('ยังไม่เข้าใจข้อความนี้ กดปุ่มด้านล่าง หรือพิมพ์ "วิธีใช้" เพื่อดูคำสั่งทั้งหมด', menu_buttons())
+
+
 def cancelled() -> dict[str, Any]:
     return _text("ยกเลิกแล้ว ข้อมูลของคุณยังอยู่เหมือนเดิม")
