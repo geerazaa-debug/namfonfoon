@@ -1,0 +1,31 @@
+<!doctype html>
+<!-- LINE OA profile image, 640x640 (LINE crops to a circle: keep marks inside r=260).
+     Render: chrome --headless --screenshot=logo_a.png --window-size=640,640 "logo.html#a" -->
+<meta charset="utf-8">
+<style>html,body{margin:0}svg{display:none}svg:target{display:block}</style>
+<!-- A: rain cloud over a drop, dust specks: all three themes -->
+<svg id="a" width="640" height="640" viewBox="0 0 640 640">
+  <rect width="640" height="640" fill="#1565c0"/>
+  <g fill="#fff">
+    <circle cx="232" cy="236" r="62"/><circle cx="320" cy="200" r="86"/><circle cx="410" cy="240" r="58"/>
+    <rect x="170" y="236" width="300" height="66" rx="33"/>
+  </g>
+  <path d="M320 330 C 320 330 252 410 252 452 a68 68 0 0 0 136 0 C 388 410 320 330 320 330Z" fill="#90caf9"/>
+  <g fill="#cfd8dc"><circle cx="452" cy="380" r="13"/><circle cx="488" cy="430" r="9"/><circle cx="446" cy="470" r="11"/></g>
+</svg>
+<!-- B: the app icon's drop with a wave inside -->
+<svg id="b" width="640" height="640" viewBox="0 0 640 640">
+  <rect width="640" height="640" fill="#1565c0"/>
+  <clipPath id="drop"><path id="dp" d="M320 120 C 320 120 190 300 190 380 a130 130 0 0 0 260 0 C 450 300 320 120 320 120Z"/></clipPath>
+  <use href="#dp" fill="#fff"/>
+  <path clip-path="url(#drop)" d="M180 410 q 35 -28 70 0 t 70 0 t 70 0 t 70 0 V 520 H 180Z" fill="#64b5f6"/>
+  <g fill="#fff" opacity=".85"><circle cx="468" cy="210" r="12"/><circle cx="500" cy="262" r="8"/><circle cx="452" cy="290" r="10"/></g>
+</svg>
+<!-- C: B with fewer, bigger orange dust specks (orange = PM2.5, white/blue dots read as splash at 40 px) -->
+<svg id="c" width="640" height="640" viewBox="0 0 640 640">
+  <rect width="640" height="640" fill="#1565c0"/>
+  <clipPath id="drop-c"><path id="dpc" d="M300 120 C 300 120 170 300 170 380 a130 130 0 0 0 260 0 C 430 300 300 120 300 120Z"/></clipPath>
+  <use href="#dpc" fill="#fff"/>
+  <path clip-path="url(#drop-c)" d="M160 410 q 35 -28 70 0 t 70 0 t 70 0 t 70 0 V 520 H 160Z" fill="#64b5f6"/>
+  <g fill="#ffa726"><circle cx="458" cy="196" r="24"/><circle cx="506" cy="252" r="17"/><circle cx="460" cy="290" r="13"/></g>
+</svg>
