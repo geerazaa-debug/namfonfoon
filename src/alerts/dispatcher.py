@@ -16,6 +16,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from src.alerts.payload_builder import build_rain_alert
+from src.alerts.push_quota import PushQuota
 from src.config import risk_thresholds, settings
 from src.data.db import Database
 from src.data.thaiwater_rain import RainAccumulator, ThaiWaterRainClient
@@ -56,6 +57,7 @@ class RunReport(BaseModel):
     suppressed_cooldown: int
     failed: int
     no_data: int
+    quota_skipped: int = 0  # monthly LINE push quota reached; retried next poll
 
 
 def cooldown_key(user_id: str, a: Assessment) -> tuple[str, str]:
@@ -74,6 +76,7 @@ class AlertPipeline:
         accumulator: RainAccumulator | None = None,
         cooldown: CooldownTracker | None = None,
         bbox: BoundingBox | None = None,
+        quota: PushQuota | None = None,
     ) -> None:
         self.fetch = fetch
         self.subscribers = subscribers  # called each poll, so new/removed users take effect
@@ -82,13 +85,15 @@ class AlertPipeline:
         self.acc = accumulator or RainAccumulator()
         self.cooldown = cooldown or CooldownTracker(timedelta(minutes=risk_thresholds()["alerts"]["cooldown_min"]))
         aoi = settings()["area_of_interest"]
+        self.quota = quota
         self.bbox = bbox or BoundingBox(**{k: aoi[k] for k in ("min_lat", "max_lat", "min_lon", "max_lon")})
 
     async def run_once(self, now: datetime | None = None) -> RunReport:
         now = now or datetime.now(UTC)
         snaps = await self.fetch(self.bbox)
         self.acc.add(snaps)
-        counts = dict(notify=0, sent=0, suppressed_cooldown=0, failed=0, no_data=0)
+        counts = dict(notify=0, sent=0, suppressed_cooldown=0, failed=0, no_data=0, quota_skipped=0)
+        quota_loaded = False
         subs = self.subscribers()
         for user_id, loc in subs.items():
             a = self.analyzer.assess(AlertInput(location=loc, rain=self.acc.near(loc)))
@@ -103,6 +108,13 @@ class AlertPipeline:
                 continue
             if self.send is None:
                 continue
+            if self.quota is not None:
+                if not quota_loaded:
+                    await self.quota.refresh(now)
+                    quota_loaded = True
+                if not self.quota.allow():
+                    counts["quota_skipped"] += 1
+                    continue
             try:
                 await self.send(user_id, [build_rain_alert(a)])
             except Exception:  # one failed push must not stop the others; retried next poll
@@ -111,6 +123,10 @@ class AlertPipeline:
                 continue
             self.cooldown.record(key, a.level, now)
             counts["sent"] += 1
+            if self.quota is not None:
+                self.quota.record()
+        if quota_loaded:
+            await self.quota.check()
         report = RunReport(stations=len(snaps), subscribers=len(subs), **counts)
         log.info("rain poll: %s", report.model_dump())
         return report

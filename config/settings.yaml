@@ -40,7 +40,14 @@ geofence:
 
 line:
   push_url: https://api.line.me/v2/bot/message/push
+  quota_url: https://api.line.me/v2/bot/message/quota
+  consumption_url: https://api.line.me/v2/bot/message/quota/consumption
   timeout_s: 10
+  # Pushes (rain alerts, owner notices) count against the plan's monthly quota; replies are free.
+  # Counted locally per push (LINE's consumption figure lags); LINE's numbers are a cross-check.
+  push_quota:
+    fallback_limit: 300     # Thai free plan, used when the quota API is unreachable
+    warn_pct: 80            # one notice to OWNER_LINE_USER_ID per month at this usage
 
 thaiwater:
   # Latest rain_1h + rain_24h for all ThaiWater stations (~4.6 MB, updated hourly)

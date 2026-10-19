@@ -31,6 +31,7 @@ from src.alerts import route_messages as rtm
 from src.alerts.dispatcher import AlertPipeline, CooldownTracker, default_fetch
 from src.alerts.line_login import InvalidIdToken, verify_id_token
 from src.alerts.line_notifier import LineNotifier, verify_signature
+from src.alerts.push_quota import PushQuota
 from src.config import risk_thresholds, settings
 from src.data.air4thai import AirStation, fetch_air
 from src.data.bma_dds import fetch_floods as fetch_bma_floods
@@ -115,11 +116,19 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         return
     async with AsyncExitStack() as stack:
         send = None
+        quota = None
+        db = get_db()
         if os.environ.get("LINE_CHANNEL_ACCESS_TOKEN"):
-            send = (await stack.enter_async_context(LineNotifier())).push
+            notifier = await stack.enter_async_context(LineNotifier())
+            send = notifier.push
+            owner = os.environ.get("OWNER_LINE_USER_ID", "")
+
+            async def notify_owner(text: str) -> object:
+                return await notifier.push(owner, [{"type": "text", "text": text}])
+
+            quota = PushQuota(db, fetch=notifier.quota, notify_owner=notify_owner if owner else None)
         else:
             log.warning("LINE_CHANNEL_ACCESS_TOKEN not set: rain poller runs in dry mode")
-        db = get_db()
         pipeline = AlertPipeline(
             fetch=default_fetch(),
             subscribers=db.users,
@@ -127,6 +136,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
             analyzer=analyzer,
             accumulator=RainAccumulator(db=db, district_of=district_name),
             cooldown=CooldownTracker(timedelta(minutes=risk_thresholds()["alerts"]["cooldown_min"]), db=db),
+            quota=quota,
         )
         stop = asyncio.Event()
         interval = settings()["rain_pipeline"]["poll_interval_min"] * 60

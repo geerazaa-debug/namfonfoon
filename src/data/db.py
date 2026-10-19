@@ -107,6 +107,13 @@ _MIGRATIONS = {
         PRIMARY KEY (observed_at, district_name)
     );
     """,
+    6: """
+    CREATE TABLE push_usage (               -- LINE push messages sent per month (quota guard); no personal data
+        month  TEXT PRIMARY KEY,            -- YYYY-MM, Bangkok time
+        sent   INTEGER NOT NULL DEFAULT 0,
+        warned INTEGER NOT NULL DEFAULT 0   -- 0 none, 1 warn threshold sent, 2 exhausted sent
+    );
+    """,
 }
 SCHEMA_VERSION = max(_MIGRATIONS)
 
@@ -249,6 +256,25 @@ class Database:
         return int(self._query("SELECT COUNT(*) FROM verification_log")[0][0])
 
     # ---- alert_cooldowns ----
+    def add_push(self, month: str, n: int = 1) -> None:
+        self._write(
+            "INSERT INTO push_usage (month, sent) VALUES (?, ?)"
+            " ON CONFLICT(month) DO UPDATE SET sent = sent + excluded.sent",
+            [(month, n)],
+        )
+
+    def push_usage(self, month: str) -> tuple[int, int]:
+        """(sent, warned) for the month; (0, 0) before the first push."""
+        rows = self._query("SELECT sent, warned FROM push_usage WHERE month = ?", (month,))
+        return (rows[0]["sent"], rows[0]["warned"]) if rows else (0, 0)
+
+    def set_push_warned(self, month: str, level: int) -> None:
+        self._write(
+            "INSERT INTO push_usage (month, warned) VALUES (?, ?)"
+            " ON CONFLICT(month) DO UPDATE SET warned = excluded.warned",
+            [(month, level)],
+        )
+
     def get_cooldown(self, user_id: str, area: str) -> tuple[datetime, str] | None:
         rows = self._query(
             "SELECT last_alert_time, last_alert_level FROM alert_cooldowns WHERE line_user_id=? AND district_name=?",

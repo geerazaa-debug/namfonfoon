@@ -64,6 +64,12 @@ class LineNotifier:
         )
         return retry_key
 
+    async def quota(self) -> tuple[int | None, int]:
+        """(monthly push limit or None when unlimited, pushes used this month) from LINE. Usage can lag."""
+        q = (await request_with_retry(self._client, "GET", self.cfg["quota_url"], max_retries=1)).json()
+        used = (await request_with_retry(self._client, "GET", self.cfg["consumption_url"], max_retries=1)).json()
+        return (int(q["value"]) if q.get("type") == "limited" else None), int(used["totalUsage"])
+
     async def reply(self, reply_token: str, messages: list[dict[str, Any]], reply_url: str) -> None:
         """Answer a webhook event. Replies are free on every LINE plan (pushes count against quota)."""
         if not 1 <= len(messages) <= MAX_MESSAGES_PER_PUSH:
