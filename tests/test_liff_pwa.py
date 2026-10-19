@@ -94,3 +94,8 @@ def test_app_config_and_pwa_assets(client, monkeypatch):
     assert client.get("/icons/..%2Fmap.html").status_code in (404, 422)
     page = client.get("/report")
     assert page.status_code == 200 and "liff" in page.text and "/v1/reports" in page.text
+
+
+def test_map_hidden_attribute_beats_class_display_rules(client):
+    """.routebar sets display:flex, which beats [hidden]: the route bar showed with no route."""
+    assert "[hidden] { display:none !important; }" in client.get("/map").text

@@ -1,6 +1,6 @@
 // Offline shell for the public map. Report data: network first, last copy when offline.
 // OSM tiles are deliberately not cached (tile usage policy forbids bulk caching); OSRM routes neither.
-const VERSION = "fw-v5";
+const VERSION = "fw-v6";
 const SHELL = ["/map", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png"];
 const CDN = ["https://cdnjs.cloudflare.com/", "https://fonts.googleapis.com/", "https://fonts.gstatic.com/"];
 
