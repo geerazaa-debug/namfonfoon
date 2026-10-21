@@ -40,6 +40,15 @@ def test_commands_ignore_quotes_spaces_and_case_and_unknown_text_gets_a_hint(lin
     assert send({"type": "message", "message": {"type": "sticker"}}) == []
 
 
+def test_my_id_answers_only_in_one_to_one_chat(line):  # noqa: F811
+    _, send = line
+    [r] = send({"type": "message", "message": {"type": "text", "text": "ไอดี ของฉัน"}})
+    assert r["text"].endswith("\nU7")
+    msg = {"type": "text", "text": "myid"}
+    group = {"source": {"type": "group", "userId": "U7"}, "type": "message", "message": msg}
+    assert "U7" not in str(send(group))
+
+
 def test_my_data_then_delete_everything(line, memory_db):  # noqa: F811
     _, send = line
     _, normal = hotspot_and_normal()

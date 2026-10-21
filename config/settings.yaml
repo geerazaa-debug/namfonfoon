@@ -22,6 +22,7 @@ project:
   help_texts: ["วิธีใช้", "ช่วยเหลือ", "เมนู", "help", "สวัสดี"]
   my_data_texts: ["ข้อมูลของฉัน"]
   delete_texts: ["ลบข้อมูลของฉัน", "ลบข้อมูล"]
+  my_id_texts: ["ไอดีของฉัน", "myid"]   # unlisted: owner copies their userId into OWNER_LINE_USER_ID
 
 # Area of interest: Greater Bangkok (lat/lon WGS84)
 area_of_interest:

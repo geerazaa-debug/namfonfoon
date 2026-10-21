@@ -93,6 +93,10 @@ def my_data(d: UserData) -> dict[str, Any]:
     return _text("\n".join(lines))
 
 
+def my_id(user_id: str) -> dict[str, Any]:
+    return _text(f"รหัสผู้ใช้ LINE ของคุณ (ใช้ได้กับบัญชีนี้เท่านั้น ไม่ใช่รหัสลับ):\n{user_id}")
+
+
 def confirm_delete() -> dict[str, Any]:
     return _text(
         "ลบข้อมูลของคุณทั้งหมดใช่ไหม?\nตำแหน่งบ้านจะถูกลบ และจะไม่ได้รับเตือนฝนอีกจนกว่าจะแชร์ใหม่",

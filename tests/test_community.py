@@ -122,7 +122,8 @@ def line(monkeypatch):
 
     def send(event: dict) -> list[dict]:
         replies.clear()
-        body = json.dumps({"events": [{"replyToken": "rt", "source": {"userId": "U7"}, **event}]}).encode()
+        source = {"type": "user", "userId": "U7"}
+        body = json.dumps({"events": [{"replyToken": "rt", "source": source, **event}]}).encode()
         assert client.post("/webhook/line", content=body, headers={"X-Line-Signature": _sign(body)}).status_code == 200
         return replies[0] if replies else []
 

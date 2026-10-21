@@ -646,6 +646,8 @@ async def handle_event(ev: dict[str, Any], now: datetime) -> list[dict[str, Any]
         return [hm.help_reply(project["name"], public_url("/privacy"))]
     if said(project["my_data_texts"]):
         return [hm.my_data(db.user_data(user_id, now - timedelta(hours=cfg["ttl_hours"])))]
+    if said(project["my_id_texts"]) and ev["source"].get("type") == "user":  # 1:1 only, never shown to a group
+        return [hm.my_id(user_id)]
     if said(project["delete_texts"]):
         return [hm.confirm_delete()]
     if data == hm.POSTBACK_DELETE:
